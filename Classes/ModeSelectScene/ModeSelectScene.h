@@ -15,6 +15,8 @@
 #include "Multi/BattleScene/BattleScene.h"
 #include "Database/SqlUtils.h"
 
+#include "Model/DataModel.h"
+
 
 USING_NS_CC;
 using namespace ui;
@@ -34,11 +36,6 @@ private :
 
 	/*Test version*/
 	void testBattleSceneCallback(Ref* pSender, Widget::TouchEventType type);
-
-	/* Create database and call server */
-	void createDatabase();
-	void serverCallback(HttpClient* client , HttpResponse* response);
-
 };
 
 #endif // _MODESELECTSCENE_H_

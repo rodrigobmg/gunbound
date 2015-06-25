@@ -39,7 +39,7 @@ void SkillDetailDialog::createDisplaySkillInfo(Sprite* parent)
 	parent->addChild(skillImage);
 
 	std::stringstream info;
-	info << "Name : " << _skillInfo.name << "\nId: " << _skillInfo.id;
+	info << "Name : " << _skillInfo.name << "\nId: " << _skillInfo.id << "\nMP: " << _skillInfo.mp_cost;
 	_statusLabel = LabelTTF::create(info.str().c_str(), "fonts/arial.ttf", 30);
 	_statusLabel->setColor(Color3B::RED);
 	_statusLabel->setHorizontalAlignment(TextHAlignment::LEFT);

@@ -31,7 +31,7 @@ bool UnitSelectScene::init(){
 	_titleLabel->setString("Select Unit");
 
 	// Get database from server
-	getDataFromDatabase();
+	_allUnitInfo = UnitDataModel::getInstance()->getDataUnitFromDatabase();
 
 	//Show list unit
 	createAllUnitView();
@@ -153,7 +153,7 @@ void UnitSelectScene::createAllUnitView(){
 				// Khoi tao unit image
 				auto spriteUnit = Button::create();
 				spriteUnit->setTag(_allUnitInfo[j + i * 4].id); // lay tag theo id
-				log("TAG : %d & UnitID : %d", j + i * 4, _allUnitInfo[j + i * 4].id);
+				log("TAG : %d", _allUnitInfo[j + i * 4].id);
 				spriteUnit->loadTextureNormal(_allUnitInfo[j + i * 4].imagePath); // load texture
 				spriteUnit->setScale(1.5f);
 				spriteUnit->setSwallowTouches(false);
@@ -266,12 +266,13 @@ void UnitSelectScene::onTouchUnitInPageView(Ref* pSender, Widget::TouchEventType
 		int currentPageIndex = _mainPage->getCurPageIndex();
 		log("Current Page: %d ", currentPageIndex);
 		if (tag > (currentPageIndex + 1) * 4) return;
-		if (tag == (currentPageIndex * 4)) return;
+		//if (tag != 0 && tag == (currentPageIndex * 4)) return;
 
 		// show dialog unit detail
 		//_onSelectedUnitId = tag;
 		_selectTemp = tag;
-		auto dialogDetail = UnitDetailDialog::create(_allUnitInfo[tag - 1], CC_CALLBACK_2(UnitSelectScene::decideCallback, this), CC_CALLBACK_2(UnitSelectScene::cancelCallback, this));
+		// Tag lay theo id nen bat dau tu 1, mang bat dau tu 0 nen can tru di 1
+		auto dialogDetail = UnitDetailDialog::create(_allUnitInfo[tag-1], CC_CALLBACK_2(UnitSelectScene::decideCallback, this), CC_CALLBACK_2(UnitSelectScene::cancelCallback, this));
 		this->getParent()->addChild(dialogDetail);
 
 		break;
@@ -495,7 +496,7 @@ void UnitSelectScene::decideCallback(Ref* pSender, Widget::TouchEventType type){
 	{
 		log("Decide Callback da duoc goi");
 		_selectedUnitNum++;
-		_onSelectedUnitId = _selectTemp;
+		_onSelectedUnitId = _selectTemp; // id = tag nen se lay gia tri id theo tag
 		onSelectUnit(_onSelectedUnitId);
 		log("Selected UnitID: %d ", _onSelectedUnitId);
 		break;
@@ -583,68 +584,9 @@ void UnitSelectScene::nextButtonCallback(Ref* pSender, Widget::TouchEventType ty
 	}
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-// GET DATA FROM DATABASE
-////////////////////////////////////////////////////////////////////////////////////////////////
-#define DATABASE_NAME "gunbound.db3"
-
-void UnitSelectScene::getDataFromDatabase()
-{
-
-	log("GET DATA FROM DATABASE");
-	// open database
-	sqlite3* db = SqlUtils::openData(DATABASE_NAME);
-	// select using query
-	string querySQL = "select * from unit";
-	vector<vector<string>> arrayInfo = SqlUtils::runQuery(db, querySQL.c_str());
-
-	// Get data after convert
-	vector<vector<string>>::iterator inter_ii;
-	vector<string>::iterator inter_jj;
-
-	for (inter_ii = arrayInfo.begin() ; inter_ii != arrayInfo.end() ; inter_ii++)
-	{
-		for (inter_jj = (*inter_ii).begin() ; inter_jj != (*inter_ii).end() ; inter_jj++)
-		{
-			log("%s", (*inter_jj).c_str());
-		}
-
-		log("==========================================");
-	}
-
-	
-	for (auto &item : arrayInfo)
-	{
-		UnitInfo temp;
-		temp.id = DataUtils::convertStringToFloat(item[0].c_str());
-		temp.name = item[1];
-		temp.hp = DataUtils::convertStringToFloat(item[2].c_str());
-		temp.hp_restore = DataUtils::convertStringToFloat(item[3].c_str());
-		temp.mp = DataUtils::convertStringToFloat(item[4].c_str());
-		temp.mp_restore = DataUtils::convertStringToFloat(item[5].c_str());
-		temp.attack_dame = DataUtils::convertStringToFloat(item[6].c_str());
-		temp.defence = DataUtils::convertStringToFloat(item[7].c_str());
-		temp.attack_sight = DataUtils::convertStringToFloat(item[8].c_str());
-		temp.move_speech = DataUtils::convertStringToFloat(item[9].c_str());
-		temp.attribute = DataUtils::convertStringToFloat(item[10].c_str());
-		temp.type = DataUtils::convertStringToFloat(item[11].c_str());
-		temp.imagePath = item[12].c_str();
-		temp.attack_delay = DataUtils::convertStringToFloat(item[13].c_str());
-
-		// Add data to array
-		_allUnitInfo.push_back(temp);
-
-		/* ///TEST_LOG
-		for (int i = 0; i < item.size() ; i++)
-		{
-			log("%s", item[i].c_str());
-		}
-		log("==========================================");
-		*/
-
-	}	
-}
-
+//////////////////////////////////////////////
+//Tao du lieu local(Version Old)
+//////////////////////////////////////////////
 /*
 Thiet lap hinh anh va cac thong so cho unit , xay dung local bang tay
 Sau nay thi createUnitImage se chuyen qua lay du lieu tu db

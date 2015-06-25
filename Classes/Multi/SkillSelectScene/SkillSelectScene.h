@@ -6,6 +6,7 @@
 #include "SkillDetailDialog.h"
 #include "Multi/UnitSelectScene/UnitSelectScene.h"
 #include "Multi/BattleScene/BattleScene.h"
+#include "Model/SkillDataModel.h"
 
 #include "cocos2d.h"
 #include "ui/CocosGUI.h"
@@ -31,14 +32,14 @@ public:
 private:
 
 	int _pageNum;
+	int _selectedUnitId;
 
 	//////////////////////////////////////////////////////////////////////////////
 	// Get data from database
 	//////////////////////////////////////////////////////////////////////////////
 	// Mang dong chua gia tri cua tat cac skill , skillInfo la struct chua thong tin skill
 	vector<SkillInfo> _allSkillInfo;
-	// get data function
-	void getDataFromDatabase();
+	
 	
 
 	/////////////////////////////////////

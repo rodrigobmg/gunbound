@@ -3,6 +3,7 @@
 
 #include "ClassBase/Define.h"
 #include "ClassBase/DialogBase.h"
+#include "Model/SkillDataModel.h"
 
 class UnitDetailDialog : public DialogBase
 {
@@ -25,6 +26,8 @@ private:
 	Button* _skillButton;
 
 	UnitInfo _unitInfo;
+
+	vector<SkillInfo> _allSkillUnit;
 
 };
 

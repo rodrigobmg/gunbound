@@ -22,6 +22,11 @@ bool UnitDetailDialog::init(UnitInfo unitInfo, MyTouchEvent decideCallback, MyTo
 	// Goi toi ham lay du lieu tu database theo _unitInfo._id duoc truyen vao
 	_unitInfo = unitInfo; // Du lieu cua unit duoc chon
 
+	_allSkillUnit = SkillDataModel::getInstance()->getDataSkillBuUnitId(_unitInfo.id);
+
+	// Lay du lieu ve skill cua unit duoc chon
+
+
 	// create dialog content
 	createDisplayUnitInfo(getDialogBG());
 
@@ -57,24 +62,15 @@ void UnitDetailDialog::createDisplayUnitInfo(Sprite* parent){
 	// status label
 	log("Unit Name: %s", _unitInfo.name.c_str());
 
+	////////////////////////////////////////////////
+	// Add Info
+	////////////////////////////////////////////////
 
 	std::stringstream statusInfo;
 	statusInfo << "Name : " << _unitInfo.name << "\nAttack: " << _unitInfo.attack_dame << "\nDefence: " << _unitInfo.defence << "\nSpeech: " << _unitInfo.move_speech << "\nHP : " << _unitInfo.hp << "\nMana: " << _unitInfo.mp << "\nAttribute: " << _unitInfo.attribute << "\nType: " << _unitInfo.type << "\nAttack: " << _unitInfo.attack_dame << "\nDefence: " << _unitInfo.defence << "\nSpeech: " << _unitInfo.move_speech;
 	_statusLabel = LabelTTF::create(statusInfo.str().c_str(), "fonts/arial.ttf", 30);
 	_statusLabel->setColor(Color3B::RED);
 	_statusLabel->setHorizontalAlignment(TextHAlignment::LEFT);
-
-
-	// skill label
-	std::stringstream skillInfo;
-	skillInfo << "Skill Name : " << _unitInfo.name;
-	_skillLabel = LabelTTF::create(skillInfo.str().c_str(), "fonts/arial.ttf", 30);
-	_skillLabel->setColor(Color3B::RED);
-	_skillLabel->setHorizontalAlignment(TextHAlignment::LEFT);
-	_skillLabel->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
-	_skillLabel->setPosition(Vec2(parent->getContentSize().width / 2 - 70, parent->getContentSize().height - 100));
-	_skillLabel->setVisible(false);
-	parent->addChild(_skillLabel);
 
 	// create scroll view info
 	if (_statusLabel->getContentSize().height > (parent->getContentSize().height - 200))
@@ -113,6 +109,36 @@ void UnitDetailDialog::createDisplayUnitInfo(Sprite* parent){
 	}
 	
 
+	////////////////////////////////////////////////
+	// Add Skill
+	////////////////////////////////////////////////
+
+	// skill label
+	auto backGroundSize = parent->getContentSize();
+
+	_skillLabel = LabelTTF::create("", "", 25);
+	_skillLabel->setHorizontalAlignment(TextHAlignment::LEFT);
+	_skillLabel->setVisible(false);
+
+	for (int i = 0; i < _allSkillUnit.size(); i++)
+	{
+		auto sp = Sprite::create(_allSkillUnit[i].imagePath);
+		sp->setScale(0.7);
+		Vec2 pos = Vec2(0, backGroundSize.height / 2 - 100 * i - 250);
+		sp->setPosition(pos);
+		_skillLabel->addChild(sp);
+		string content = _allSkillUnit[i].name.append("\n").append(_allSkillUnit[i].effect);
+		auto lb = Label::create(content.c_str(), "", 25, Size(400, 100));
+		lb->setColor(Color3B::BLACK);
+		lb->setPosition(pos + Vec2(50, -10));
+		lb->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
+		_skillLabel->addChild(lb);
+	}
+
+
+	_skillLabel->setPosition(Vec2(parent->getContentSize().width / 2 - 70, parent->getContentSize().height - 100));
+	_skillLabel->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
+	parent->addChild(_skillLabel);
 }
 
 

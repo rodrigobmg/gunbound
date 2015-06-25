@@ -40,7 +40,8 @@ sqlite3* SqlUtils::openData(std::string dbName)
 #endif
 
 	result = sqlite3_open(dbPath.c_str(), &pDB);
-	/* //or
+	/* 
+	//or
 	result = sqlite3_open_v2(dbPath.c_str() , &pDB , SQLITE_OPEN_READWRITE , NULL);
 	*/
 

@@ -14,10 +14,17 @@ class UnitDataModel : public Ref
 {
 public:
 	static UnitDataModel* getInstance();
+	virtual bool init();
+
+	vector<UnitInfo> getDataUnitFromDatabase();
+	UnitInfo getDataUnitById(int unitId);
 
 private:
+
 	static UnitDataModel* _unitInfoData;
 
+	
+	
 };
 
 

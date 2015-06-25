@@ -17,9 +17,9 @@ using namespace std;
 class BattleScene : public LayerBase
 {
 public :
-	static Scene* createScene();
-	virtual bool init();
-	CREATE_FUNC(BattleScene);
+	static Scene* createScene(int selectedUnitId);
+	static BattleScene* create(int selectedUnitId);
+	virtual bool init(int selectedUnitId);
 
 private :
 	/*PhysicsWorld*/
@@ -31,6 +31,8 @@ private :
 
 	/*Character*/
 	Sprite* _mainCharacter;
+	vector<SkillInfo> _skillUnitList;
+	vector<SkillInfo> _skillUnitSelected;
 
 	/*Status bar*/
 	Sprite* _statusCharacterBar;
@@ -109,10 +111,10 @@ private :
 	virtual void moveTypeSelectCancelCallback(Ref* pSender, Widget::TouchEventType type);
 
 	/* Skill button */
-	Button* _skill1Btn;
-	Button* _skill2Btn;
-	Button* _skill3Btn;
-	Button* _skill4Btn;
+	Button* _skill1UnitBtn;
+	Button* _skill2UnitBtn;
+	Button* _skill3SelectedBtn;
+	Button* _skill4SelectedBtn;
 	virtual void createSkillButton();
 };
 

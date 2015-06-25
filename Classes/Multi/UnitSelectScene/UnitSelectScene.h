@@ -67,6 +67,11 @@ private:
 	// Show all unit using pageview
 	//////////////////////////////////////////////////////////////////////////////
 
+	//////////////////////////////////////////////
+	// Lay du lieu tu database
+	//////////////////////////////////////////////
+	vector<UnitInfo> _allUnitInfo;
+	vector<UnitInfoOld> _allUnitInfoOld;
 	// Khoi tao du kieu unitData local
 	virtual void createUnitInfoData();
 
@@ -122,12 +127,7 @@ private:
 	int _selectedUnitNum = 0;
 
 
-	//////////////////////////////////////////////
-	// Lay du lieu tu database
-	//////////////////////////////////////////////
-	vector<UnitInfo> _allUnitInfo;
-	vector<UnitInfoOld> _allUnitInfoOld;
-	void getDataFromDatabase();
+	
 
 };
 

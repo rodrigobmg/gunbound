@@ -3,7 +3,7 @@
 /*
 create() la khi khoi tao cac doi tuong va cap phat bo nho cho chung
 */
-Scene* BattleScene::createScene()
+Scene* BattleScene::createScene(int selectedUnitId)
 {
 	auto scene = Scene::createWithPhysics();
 	// Set physics world for scene
@@ -11,10 +11,23 @@ Scene* BattleScene::createScene()
 	scene->getPhysicsWorld()->setGravity(Vect::ZERO); // Xet trong luong bang 0
 
 
-	auto layer = BattleScene::create();
+	auto layer = BattleScene::create(selectedUnitId);
 	layer->setPhysicsWorldToLayer(scene->getPhysicsWorld());
 	scene->addChild(layer);
 	return scene;
+}
+
+
+BattleScene* BattleScene::create(int selectedUnitId)
+{
+	auto layer = new BattleScene();
+	if (layer && layer->init(selectedUnitId))
+	{
+		layer->autorelease();
+		return layer;
+	}
+	CC_SAFE_DELETE(layer);
+	return nullptr;
 }
 
 void BattleScene::setPhysicsWorldToLayer(PhysicsWorld* myWorld)
@@ -25,19 +38,30 @@ void BattleScene::setPhysicsWorldToLayer(PhysicsWorld* myWorld)
 /*
 init() la khi khoi tao trang thai cho nhung doi tuong vua duoc khoi tao tai create
 */
-bool BattleScene::init()
+bool BattleScene::init(int selectedUnitId)
 {
 	if (!LayerBase::init())
 	{
 		return false;
 	}
 
+	//////////////////////////////////////////////////////////////////////////////////
+	// Hide cac thanh phan cua LayerBase va thiet lap cac thanh phan moi
+	//////////////////////////////////////////////////////////////////////////////////
+
 	_pageTitleSprite->setVisible(false);
 	_usernameBG->setVisible(false);
 	_backButton->setVisible(false);
 
+	//////////////////////////////////////////////////////////////////////////////////
+	// Thiet lap kieu di chuyen cho _mainCharacter
+	//////////////////////////////////////////////////////////////////////////////////
+
 	// Khoi tao gia tri moveMode mac dinh la move_auto
 	log("Default  moveKey: %d ", UserDefault::getInstance()->getIntegerForKey(MOVEKEY));
+	// Neu chua co gia tri thi UserDefautl::getInstance()->getIntergerForKey se duoc mac dinh la 0
+	// Nhung sau khi nhan gia tri thi no sex duoc luu vao file xml theo key. 
+	// Tru khi duoc thay doi, neu khong no se nhan gia tri do
 	if (UserDefault::getInstance()->getIntegerForKey(MOVEKEY) == 0)
 	{
 		UserDefault::getInstance()->setIntegerForKey(MOVEKEY, MOVE_MANUAL);
@@ -59,9 +83,9 @@ bool BattleScene::init()
 	//  Thiet lap hinh anh cho di chuyen manual
 	auto action = RotateBy::create(1, 180);
 
-
+	// Khoi tao doi tuong touchBegin va touchEnd doi voi di chuyen theo type manual
 	_touchMoveBeginSprite = Sprite::create("image/screen/battle/ui_move.png");
-	_touchMoveBeginSprite->setVisible(false);
+	_touchMoveBeginSprite->setVisible(false); // Hide neu khong phai type manual
 	addChild(_touchMoveBeginSprite , 10);
 	_touchMoveBeginSprite->runAction(RepeatForever::create(action));
 
@@ -69,6 +93,10 @@ bool BattleScene::init()
 	_touchMoveEndSprite->setVisible(false);
 	addChild(_touchMoveEndSprite , 10);
 	_touchMoveEndSprite->runAction(RepeatForever::create(action->clone()));
+
+	//////////////////////////////////////////////////////////////////////////////////
+	// Xay dung noi dung cua scene
+	//////////////////////////////////////////////////////////////////////////////////
 
 	// Create BattleScene content
 	createContent();
@@ -122,6 +150,7 @@ void BattleScene::createDebugContent()
 	addChild(menuDebugBtn, 10);
 }
 
+// Button debug physics callback
 void BattleScene::debugPhysicsButtonCallback(Ref* pSender, Widget::TouchEventType type)
 {
 	log("Debug Physics Callback");
@@ -151,6 +180,7 @@ void BattleScene::debugPhysicsButtonCallback(Ref* pSender, Widget::TouchEventTyp
 	}
 }
 
+// Chuyen ve trang ModeSelectScene
 void BattleScene::menuButtonCallback(Ref* pSender, Widget::TouchEventType type)
 {
 	log("Debug Menu Callback");
@@ -267,6 +297,10 @@ void BattleScene::createContent()
 
 void BattleScene::createBackground()
 {
+	/////////////////////////////////////////////////////////////////////////////
+	// Version 1: Thiet lap background bang 4 background con
+	/////////////////////////////////////////////////////////////////////////////
+
 	// create background chinh
 	_background = Node::create();
 	_background->setPosition(Vec2::ZERO);
@@ -289,8 +323,17 @@ void BattleScene::createBackground()
 
 	// Create physicsbody for background
 	createBackgroundBody();
+
+
+	/////////////////////////////////////////////////////////////////////////////
+	// Version 2: Xay dung background bang tilde map
+	/////////////////////////////////////////////////////////////////////////////
+
+
+
 }
 
+/* Khoi tao 1 doi tuong Sprite chinh la 1 phan cua background */
 Sprite* BattleScene::createBackgroundPart(Vec2 pos)
 {
 	auto part = Sprite::create("image/screen/battle/bg.png");
@@ -299,7 +342,7 @@ Sprite* BattleScene::createBackgroundPart(Vec2 pos)
 	return part;
 }
 
-
+/* Khoi tao phusics body cho background */
 void BattleScene::createBackgroundBody()
 {
 	Size hSize = Size(_visibleSize.width * 2, 100);
@@ -317,6 +360,7 @@ void BattleScene::createBackgroundBody()
 
 }
 
+/* Khoi tao tung phan cua physics body */
 Node* BattleScene::createBodyPart(Vec2 pos, Size bodySize)
 {
 	auto node = Node::create();
@@ -336,6 +380,7 @@ Node* BattleScene::createBodyPart(Vec2 pos, Size bodySize)
 // CLOCK AND MINIMAP
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
+/* Khoi tao dong ho hien thi thoi gian tran dau */
 void BattleScene::createClockBattle()
 {
 	// create clock
@@ -350,7 +395,7 @@ void BattleScene::createClockBattle()
 	_timeViewSprite->addChild(_timeViewLabel);
 }
 
-
+/* Khoi tao minimap chinh la map battle thu nho */
 void BattleScene::createMiniMap()
 {
 	// create minimap
@@ -378,6 +423,9 @@ void BattleScene::createMiniMap()
 void BattleScene::createSkillButton()
 {
 	// Tao 4 loai skill trong do co 2 loai unit co san va 2 loai duoc lua chon
+
+	_skillUnitList = SkillDataModel::getInstance()->getDataSkillBuUnitId(1);
+
 
 }
 

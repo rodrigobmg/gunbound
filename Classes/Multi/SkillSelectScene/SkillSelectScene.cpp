@@ -30,10 +30,13 @@ bool SkillSelectScene::init(int unitId)
 		return false;
 	}
 
+	_selectedUnitId = unitId;
+
 	_titleLabel->setString("Select Skill");
 
 	// get data from database
-	getDataFromDatabase();
+	_allSkillInfo = SkillDataModel::getInstance()->getDataSkillFromDatabase();
+
 
 	// Show list skill
 	createAllSkillView();
@@ -525,7 +528,7 @@ void SkillSelectScene::nextButtonCallback(Ref* pSender, Widget::TouchEventType t
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		Director::getInstance()->replaceScene(TransitionMoveInR::create(0.5f, BattleScene::createScene()));
+		Director::getInstance()->replaceScene(TransitionMoveInR::create(0.5f, BattleScene::createScene(_selectedUnitId)));
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:
@@ -534,54 +537,6 @@ void SkillSelectScene::nextButtonCallback(Ref* pSender, Widget::TouchEventType t
 		break;
 	}
 }
-
-
-//////////////////////////////////////////////////////////////////////////////
-// GET DATA FROM DATABASE
-//////////////////////////////////////////////////////////////////////////////
-#define DATABASE_NAME "gunbound.db3"
-
-void SkillSelectScene::getDataFromDatabase()
-{
-	sqlite3* db = SqlUtils::openData(DATABASE_NAME);
-
-	string querySQL = "select * from skill";
-	vector<vector<string>> arrayInfo = SqlUtils::runQuery(db, querySQL);
-
-	for (auto &item : arrayInfo)
-	{
-		SkillInfo temp;
-		temp.id = DataUtils::convertStringToFloat(item[0].c_str());
-		temp.name = DataUtils::convertStringToFloat(item[1].c_str());
-		temp.aoe = DataUtils::convertStringToFloat(item[2].c_str());
-		temp.targetType = DataUtils::convertStringToFloat(item[3].c_str());
-		temp.mp_cost = DataUtils::convertStringToFloat(item[4].c_str());
-		temp.cooldown = DataUtils::convertStringToFloat(item[5].c_str());
-		temp.skillType = DataUtils::convertStringToFloat(item[6].c_str());
-		temp.dameType = DataUtils::convertStringToFloat(item[7].c_str());
-		temp.dameValue = DataUtils::convertStringToFloat(item[8].c_str());
-		temp.duration = DataUtils::convertStringToFloat(item[9].c_str());
-		temp.effect = item[10];
-		temp.effectPath = item[11];
-		temp.imagePath = item[12];
-		temp.helpType = DataUtils::convertStringToFloat(item[13].c_str());
-		temp.areaType = DataUtils::convertStringToFloat(item[14].c_str());
-
-		// Add data to array
-		_allSkillInfo.push_back(temp);
-
-		///TEST_LOG
-		for (int i = 0; i < item.size() ; i++)
-		{
-		log("%s", item[i].c_str());
-		}
-		log("==========================================");
-		
-
-	}
-
-}
-
 
 
 /*
