@@ -1,0 +1,69 @@
+Step1:
++ Xây dựng Class LayerBase làm class base, nó sẽ được các class khác kế thừa
++ Xây dựng ModeSelectScene: Solo or Multi
++ Xây dựng UnitSelectScene , UnitDetailDialog
++ Xây dựng SkillSelectScene , SkillDetailDialog
++ Xây dựng DialogBase
++ Sửa UnitDetailDialog va SkillDetailDialog extends DialogBase
+Step2:
++ Xây dựng BatleScene: 4 thuộc tính skill , character , map follow , minimap và 1 clippingNode hiển thị HP của character
+Step3:
++ Download SQLite: http://www.sqlite.org/download.html
++ Xây dựng Class SqlUtils: create db, create table , insert data , runQuery ,delete row , delete db , closeDB
++ Sử dụng dữ liệu được lấy từ SQLite trên localhost(server được khởi tạo bằng Xampp trên máy)
++ Thay đổi các dữ liệu local tự tạo trong UnitSelectScene và SkillSelectScene bằng dữ liệu lấy từ db
+Step4:
++ Trong class ModeSelectScene: Khởi tạo Database từ server localhost
++ Sau khi gửi request lên server thì sẽ nhận được dữ liệu từ file của server trả về.
+
+Như vậy khi select Mode thì ta sẽ thực hiện việc getDataFromDatabase();
+--> Khi thực hiện openData thì có lỗi.
+Nguyên nhân phát sinh: Thực hiện việc coppy và ghi file từ server về client có lỗi nên dữ liệu đã không được ghi
+-> Giải quyết lỗi: Có 2 thay đổi trong code, đó là thực hiện ghi file sẽ sử dụng modetype đó là "wb"
+Thứ 1:Là ghi ra file nhị phân chứ không phải sử dụng "w" để ghi file txt như hướng dẫn
+Thứ 2:Trong Window thì khi ghi file sẽ không có ký tự kết thúc là \0 , vì thế ta cần thêm ký tự kết thúc vào
+responseData->data() khi ghi vào file( Sau khi test lại thì điều này là ko cần thiết, chỉ cần 1 là đủ)
+
+Step5: Sau khi đã tạo csdl thì trong UnitSelectScene và SkillSelectScene sẽ không cần sử dụng dữ liệu local tạo
+bằng tay nữa mà sẽ sử dụng trực tiếp dữ liệu lấy từ server về.
++ Build trên android thì màn hình bị xoay thẳng đứng -> sửa trong file Menifest
+Sửa thành:  
+[new]android:screenOrientation="landscape" // nằm ngang
+[old]android:screenOrientation="portrait" // thẳng đứng
++ Build trên android thì thông báo không thể connect vào database trên server localhost được?
+Giải quyết:
+Việc không connect vào sever localhost là do lúc cài đặt XAMPP vẫn chưa config việc truy xuất vào localhost
+Tham khảo: http://ayebee-ty.hatenablog.com/entry/20111020/1319088833
+Trên site kia đã viết cách giải quyết, đó là chuyển việc khai báo trong file httpd.conf
+ServerName Localhost:80 thành ServerName IPV4_Adress(máy công ty là 192.168.0.208:80)
+(Để lấy địa chỉ IP chỉ cần vào conmandline và thực hiện lệnh ipconfig và lấy địa chỉ ipv4)
+Ngoài ra ta phải add thêm port 80 vào firewall , nhưng trong máy công ty thì cổng này đã được phần mềm
+diệt virut ESET smart security quản lý nên ta cần xem tại đây:
+http://kb.eset.com/esetkb/index?page=content&id=SOLN2623
+http://www.microcentertech.com/tech_center/DB/read_article.php?faqid=./HowTos/HOW5004712B.htm
+Sau khi làm theo các bước trên và thêm cổng cho xampp/apache/bin/httpd.exe thì ta đã thành công
+
+Như vậy bây giờ từ bất kỳ máy nào cùng sử dụng mạng LAN đều có thể truy nhập vào forder trong xampp/htdocs
+
++ Xây dựng Class BattleScene , MoveTypeSelectDialog
+Class BattleScene thực hiện chơi game
+Class MoveTypeSelectDialog thực hiện việc lựa chọn cách di chuyển của unit trong BattleScene.
+
+Trong phần này thì ta cần chú ý đến việc sử dụng UserDefault
+UserDefault được Cocos2d-x xây dựng, giúp cho người lập trình games có thể lưu một giá trị dữ liệu 
+với một key tương ứng trong .xml. Các giá trị đi với key đó vẫn tồn tại ngay cả khi trò chơi của bạn 
+khởi động lại sau khi thoát ra.
+(File UserDefault.xml được hệ thống sinh ra để lưu trữ dữ liệu đc đặt cùng 1 thư mục với file sqlite)
+Tham khảo: http://www.stdio.vn/articles/read/245-lam-the-nao-de-luu-du-lieu-trong-cocos2d-x-3xx
+
++ Step6: Đồng bộ data với BattleScene
+Dữ liệu sẽ được đồng bộ từ data(selected unit , selected skill)
+
+
+
+this->schedule( schedule_selector(HelloWorld::gameLogic), 1.0 );
+làm 2 việc
++ gọi hàm schedule truyền vào 2 tham số 
+( 1 là schedule_selector(), 1 là 1.0, cứ 1 giây gọi 1 lần)
++ là 1 Macro ( xem Macro trong C, C++ để hiểu cách dùng),
+Macro này gọi đến hàm gameLogic với thời gian 1.0 giây
