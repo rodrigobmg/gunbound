@@ -45,6 +45,8 @@ bool BattleScene::init(int selectedUnitId)
 		return false;
 	}
 
+	_selectedCharacterId = selectedUnitId;
+
 	//////////////////////////////////////////////////////////////////////////////////
 	// Hide cac thanh phan cua LayerBase va thiet lap cac thanh phan moi
 	//////////////////////////////////////////////////////////////////////////////////
@@ -52,6 +54,14 @@ bool BattleScene::init(int selectedUnitId)
 	_pageTitleSprite->setVisible(false);
 	_usernameBG->setVisible(false);
 	_backButton->setVisible(false);
+
+	//////////////////////////////////////////////////////////////////////////////////
+	// Lay data tu database
+	//////////////////////////////////////////////////////////////////////////////////
+
+	_allSkillSelectedInfo = SkillDataModel::getInstance()->getDataSkillBuUnitId(_selectedCharacterId);
+	_allUnitSelectedInfo = UnitDataModel::getInstance()->getDataUnitById(_selectedCharacterId);
+
 
 	//////////////////////////////////////////////////////////////////////////////////
 	// Thiet lap kieu di chuyen cho _mainCharacter
@@ -218,18 +228,15 @@ void BattleScene::createContent()
 	// create minimap
 	createMiniMap();
 
+	// create skill button
 	createSkillButton();
-
-	// image Path
-	_imagePath = "image/unit_new/move/red/";
 
 
 	////////////////////////////////////////////////////////////////
 	// Create main character sprite
 	////////////////////////////////////////////////////////////////
-	_mainCharacter = Sprite::create("image/unit_new/move/red/unit_00_08_1.png");
-	//_mainCharacter->setPosition(Vec2(_visibleSize.width / 2, _visibleSize.height / 2));
-	_mainCharacter->setPosition(Vec2(100, 100));
+	_mainCharacter = Character::createCharacterWithId(_selectedCharacterId);
+	_mainCharacter->setPosition(Vec2(_visibleSize.width , 100));
 	_mainCharacter->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
 	_mainCharacter->setPhysicsBody(PhysicsBody::createCircle(50 , PhysicsMaterial(1, 0, 1)));
 	_mainCharacter->getPhysicsBody()->setRotationEnable(false);
@@ -237,11 +244,16 @@ void BattleScene::createContent()
 
 	_background->addChild(_mainCharacter, 2);
 
+	/////////////////////////////////////////////////////////////////
+	// Background follow character
+	/////////////////////////////////////////////////////////////////
+
 	// create follow background
 
 	auto follow = Follow::create(_mainCharacter);
 	follow->setTag(101);
 	_background->runAction(follow);
+
 
 	/////////////////////////////////////////////////////////////////
 	// create Menu
@@ -424,9 +436,62 @@ void BattleScene::createSkillButton()
 {
 	// Tao 4 loai skill trong do co 2 loai unit co san va 2 loai duoc lua chon
 
-	_skillUnitList = SkillDataModel::getInstance()->getDataSkillBuUnitId(1);
+	string skill1ImagePath = _allSkillSelectedInfo[0].imagePath;
+	string skill2ImagePath = _allSkillSelectedInfo[1].imagePath;
+
+	string skill3ImagePath = "image/screen/battle/skill_icon_3.png";
+	string skill4ImagePath = "image/screen/battle/skill_icon_4.png";
+
+	_skill1UnitBtn = Button::create();
+	_skill1UnitBtn->setTag(SKILL_TAG_1);
+	_skill1UnitBtn->loadTextureNormal(skill1ImagePath.c_str());
+	_skill1UnitBtn->setPosition(Vec2(_visibleSize.width / 2 - 210 , _skill1UnitBtn->getContentSize().height/2 + 20));
+	_skill1UnitBtn->addTouchEventListener(CC_CALLBACK_2(BattleScene::skillButtonCallback, this));
+	addChild(_skill1UnitBtn);
+
+	_skill2UnitBtn = Button::create();
+	_skill2UnitBtn->setTag(SKILL_TAG_2);
+	_skill2UnitBtn->loadTextureNormal(skill2ImagePath.c_str());
+	_skill2UnitBtn->setPosition(Vec2(_visibleSize.width / 2 - 70, _skill2UnitBtn->getContentSize().height / 2 + 20));
+	_skill2UnitBtn->addTouchEventListener(CC_CALLBACK_2(BattleScene::skillButtonCallback, this));
+	addChild(_skill2UnitBtn);
+
+	_skill3SelectedBtn = Button::create();
+	_skill3SelectedBtn->setTag(SKILL_TAG_3);
+	_skill3SelectedBtn->loadTextureNormal(skill3ImagePath.c_str());
+	_skill3SelectedBtn->setPosition(Vec2(_visibleSize.width / 2 + 70, _skill3SelectedBtn->getContentSize().height / 2 + 20));
+	_skill3SelectedBtn->addTouchEventListener(CC_CALLBACK_2(BattleScene::skillButtonCallback, this));
+	addChild(_skill3SelectedBtn);
+
+	_skill4SelectedBtn = Button::create();
+	_skill4SelectedBtn->setTag(SKILL_TAG_4);
+	_skill4SelectedBtn->loadTextureNormal(skill4ImagePath.c_str());
+	_skill4SelectedBtn->addTouchEventListener(CC_CALLBACK_2(BattleScene::skillButtonCallback, this));
+	_skill4SelectedBtn->setPosition(Vec2(_visibleSize.width / 2 + 210, _skill4SelectedBtn->getContentSize().height / 2 + 20));
+	addChild(_skill4SelectedBtn);
 
 
+}
+
+void BattleScene::skillButtonCallback(Ref* pSender, Widget::TouchEventType type)
+{
+	Button* button = dynamic_cast<Button*>(pSender);
+	int buttonTag = button->getTag();
+	log("Button %d ", buttonTag);
+
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::BEGAN:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::MOVED:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::CANCELED:
+		break;
+	default:
+		break;
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -500,11 +565,12 @@ void BattleScene::updateMiniMap()
 bool BattleScene::onTouchBegan(Touch* touch, Event* event)
 {
 	_touchStartPoint = touch->getLocation();
-	//if (_moveMode == MOVE_MANUAL)
-	//{
+
+	if (_moveMode == MOVE_MANUAL)
+	{
 		_touchMoveBeginSprite->setPosition(_touchStartPoint);
 		_touchMoveBeginSprite->setVisible(true);
-	//}
+	}
 
 	return true;
 }
@@ -531,9 +597,8 @@ void BattleScene::onTouchMoved(Touch* touch, Event* event)
 		// Neu touch vao trong beginSprite thi se dung lai
 		if (vectorMove.length() < _touchMoveBeginSprite->getContentSize().width / 6)
 		{
-			_mainCharacter->getPhysicsBody()->setVelocity(Vect::ZERO);
-			_mainCharacter->stopAllActionsByTag(_currentMoveDirectTag);
-			
+			// Thuc hien stop action move
+			_mainCharacter->stopMoveAction();
 			return;
 
 		}
@@ -542,128 +607,26 @@ void BattleScene::onTouchMoved(Touch* touch, Event* event)
 
 
 	// Di chuyen theo diem touch move
-	_mainCharacter->getPhysicsBody()->setVelocity(Vect(250 * cos(vectorMove.getAngle()), 250 * sin(vectorMove.getAngle())));
+	_mainCharacter->setCharacterMoveSpeech(250);
+	_mainCharacter->createMoveActionByVector(vectorMove);
 
 	/* Thuc hien tinh direction theo goc vua lay*/
-	int direct = getDirectionWithAngle(-(vectorMove.getAngle() * RAD_DEG) + 90);
+	int direct = _mainCharacter->getDirectionWithAngle(-(vectorMove.getAngle() * RAD_DEG) + 90);
 	_miniIcon->setRotation(-(vectorMove.getAngle() * RAD_DEG) + 90);
-	if (direct != 0)
-	{
-		// Thuc hien xoay _mainCharacter
-		actionRotateWithDirectionIndex(direct);
-	}
 }
 
 void BattleScene::onTouchEnded(Touch* touch, Event* event)
 {
-	//if (_moveMode == MOVE_MANUAL)
-	//{
-		_touchMoveBeginSprite->setVisible(false);
-		_touchMoveEndSprite->setVisible(false);
-	//}
-	_mainCharacter->getPhysicsBody()->setVelocity(Vect::ZERO);
-	_mainCharacter->stopAllActionsByTag(_currentMoveDirectTag);
-}
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-//XU LY MOVE & ATTACK ANIMATION
-//////////////////////////////////////////////////////////////////////////////////////////////
-
-/* Lay chi so direction tuong ung voi goc */
-int BattleScene::getDirectionWithAngle(float angle)
-{
-	if (getDetectAngleFlg(0, angle)) return 8; // if(angle < 22 && angle > -22) return 8
-	if (getDetectAngleFlg(45, angle)) return 9; // if(angle < 45+22 && angle > 45-22) return 9
-	if (getDetectAngleFlg(90, angle)) return 6;
-	if (getDetectAngleFlg(135, angle)) return 3;
-	if (getDetectAngleFlg(180, angle)) return 2;
-	if (getDetectAngleFlg(-45, angle)) return 7;
-	if (getDetectAngleFlg(-90, angle)) return 4;
-	if (getDetectAngleFlg(255, angle)) return 1;
-
-	return 0;
-	
-}
-
-/* Flag dung de xac dinh goc */
-bool BattleScene::getDetectAngleFlg(int offset, float angle)
-{
-	if ((angle < (offset + 22)) && (angle > (offset - 22)) )
+	_touchMoveBeginSprite->setVisible(false);
+	_touchMoveEndSprite->setVisible(false);
+	if (_moveMode == MOVE_MANUAL)
 	{
-		return true;
+		//_touchMoveBeginSprite->setVisible(false);
+		//_touchMoveEndSprite->setVisible(false);
 	}
+	_mainCharacter->stopMoveAction();
 
-	return false;
-}
 
-void BattleScene::actionRotateWithDirectionIndex(int directionIndex)
-{
-	log("Direct: %d ", directionIndex);
-	/* Kiem tra neu van la action cu thi ko stop no lai*/
-	if (_mainCharacter->getNumberOfRunningActions() > 0) {
-		if (_mainCharacter->getActionByTag(directionIndex) != nullptr) {
-			return;
-		}
-	}
-	// Thuc hien stop action cu khi chuyen huong(direct thay doi)
-	_mainCharacter->stopAllActionsByTag(_currentMoveDirectTag);
-	log("Stop action with tag: %d ", _currentMoveDirectTag);
-	// thuc hien animation repeat forever
-	
-	auto action = Animate::create(createMoveAnimationCharacterWithImage(directionIndex, _imagePath));
-	auto repeat = RepeatForever::create(action);
-	_currentMoveDirectTag = directionIndex;
-	repeat->setTag(directionIndex);
-
-	_mainCharacter->runAction(repeat);
-
-}
-
-// Tao 1 doi tuong animation thuc hien hanh dong di chuyen duoc xay dung bang anh
-Animation* BattleScene::createMoveAnimationCharacterWithImage(int imageId, std::string path)
-{
-	// Tao animation bang sprite sheet
-	auto moveAnimation = Animation::create();
-
-	for (int i = 1 ; i < 3 ; i++)
-	{
-		char szName[100] = { 0 };
-		sprintf(szName, "unit_00_0%d_%d.png", imageId, i);
-		std::string p = path;
-		p.append(szName);
-		moveAnimation->addSpriteFrameWithFile(p.c_str());
-	}
-
-	// Thoi gian animation thuc hien
-	moveAnimation->setDelayPerUnit(0.2f);
-	// Restore lai diem dat cua cac frame moi khi animate thuc hien
-	moveAnimation->setRestoreOriginalFrame(true);
-	// Thuc hien lap
-	moveAnimation->setLoops(true);
-
-	return moveAnimation;
-
-}
-
-// create attack animation object using sprite sheet
-Animation* BattleScene::createAttackAnimationCharacter(int imageId, std::string path)
-{
-	auto attackAnimation = Animation::create();
-	for (int i = 0; i < 3 ; i++)
-	{
-		char szName[100] = { 0 };
-		sprintf(szName, "unit_00_0%d_attack_%d.png", imageId, i);
-		string p = path;
-		p.append(szName);
-		attackAnimation->addSpriteFrameWithFile(p.c_str());
-	}
-
-	attackAnimation->setDelayPerUnit(0.25f);
-	attackAnimation->setRestoreOriginalFrame(true);
-	attackAnimation->setLoops(true);
-
-	return attackAnimation;
 }
 
 

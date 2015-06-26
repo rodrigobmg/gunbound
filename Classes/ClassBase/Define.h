@@ -16,6 +16,12 @@ using namespace std;
 #define RAD_DEG (180 / PI)
 
 
+#define SKILL_TAG_1 1
+#define SKILL_TAG_2 2
+#define SKILL_TAG_3 3
+#define SKILL_TAG_4 4
+
+
 struct UserInfo
 {
 	std::string _name;

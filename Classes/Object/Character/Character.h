@@ -13,19 +13,32 @@ public:
 	/* Khoi tao character theo id cua unit */
 	static Character* createCharacterWithId(int characterId);
 	
-	/* Khoi tao character theo imagePath */
-	static Character* createCharacterWithImage(std::string imagePath);
-	
 	/* Init */
 	virtual bool initWithId(int characterId);
-	virtual bool initWithImage(std::string imagePath);
+	virtual void createImagePathByUnitId(int characterId);
 
+	CC_SYNTHESIZE(string, _imagePath, ImagePath);
+	CC_SYNTHESIZE(int, _currentMoveAnimation, CurrentMoveAnimation);
+	CC_SYNTHESIZE(float, _characterMoveSpeech, CharacterMoveSpeech );
 
-private:
 	Sprite* _characterSprite;
 
 
-	CC_SYNTHESIZE(string, _imagePath, ImagePath);
+	/* Lay chi so direction tuong ung voi goc */
+	int getDirectionWithAngle(float angle);
+	/* Flag dung de xac dinh goc */
+	bool getDetectAngleFlg(int offset, float angle);
+	/* Thuc hien animation xoay character theo direction */
+	void actionRotateWithDirectionIndex(int directionIndex);
+
+	// Tao 1 doi tuong animation thuc hien hanh dong di chuyen duoc xay dung bang anh
+	Animation* createMoveAnimationCharacterWithImage(int imageId , string imagePath);
+
+	// Tao 1 doi tuong animation thuc hien hanh dong di chuyen duoc xay dung bang anh
+	Animation* createAttackAnimationCharacterWithImage(int imageId);
+
+	void createMoveActionByVector(Vec2 moveVector);
+	void stopMoveAction();
 
 };
 

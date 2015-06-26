@@ -9,6 +9,8 @@
 #include "ClassBase/Define.h"
 #include "MoveTypeSelectDialog.h"
 #include "ModeSelectScene/ModeSelectScene.h"
+#include "Object/Character/Character.h"
+
 
 USING_NS_CC;
 using namespace std;
@@ -29,10 +31,20 @@ private :
 	Node* _background;
 	std::string _imagePath;
 
+	/* Get data from database */
+	vector<SkillInfo> _allSkillSelectedInfo; // Cac skill duoc unit lua chon
+	// Thuc ra character duoc lua chon chinh la tuong trong tran dau
+	UnitInfo _allUnitSelectedInfo; // Unit duoc lua chon
+
 	/*Character*/
-	Sprite* _mainCharacter;
+	Character* _mainCharacter;
 	vector<SkillInfo> _skillUnitList;
 	vector<SkillInfo> _skillUnitSelected;
+	void createCharacterImageById(int unitId);
+
+	int _selectedCharacterId;
+
+	Character* _test;
 
 	/*Status bar*/
 	Sprite* _statusCharacterBar;
@@ -86,16 +98,6 @@ private :
 	virtual void onTouchMoved(Touch* touch, Event* event);
 	virtual void onTouchEnded(Touch* touch, Event* event);
 
-	/*direct angle using roatate unit*/
-	int _currentMoveDirectTag;
-
-	bool getDetectAngleFlg(int offset, float angle); // Tinh goc 
-	int getDirectionWithAngle(float angle); // Tinh derect theo goc
-	void actionRotateWithDirectionIndex(int derect); // Xoay character theo derect
-	Animation* createMoveAnimationCharacterWithImage(int imageId, std::string path);
-	Animation* createAttackAnimationCharacter(int imageId, std::string path);
-
-
 	/* Debug version setup */
 	void debugPhysicsButtonCallback(Ref* pSender, Widget::TouchEventType type);
 	void menuButtonCallback(Ref* pSender, Widget::TouchEventType type);
@@ -116,6 +118,7 @@ private :
 	Button* _skill3SelectedBtn;
 	Button* _skill4SelectedBtn;
 	virtual void createSkillButton();
+	virtual void skillButtonCallback(Ref* pSender, Widget::TouchEventType type);
 };
 
 #endif // _BATTLESCENE_H_

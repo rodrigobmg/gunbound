@@ -109,7 +109,7 @@ void ModeSelectScene::testBattleSceneCallback(Ref* pSender, Widget::TouchEventTy
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		Director::getInstance()->replaceScene(TransitionMoveInR::create(0.5f, BattleScene::createScene()));
+		Director::getInstance()->replaceScene(TransitionMoveInR::create(0.5f, BattleScene::createScene(1)));
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:
