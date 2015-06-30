@@ -234,7 +234,13 @@ void BattleScene::menuButtonCallback(Ref* pSender, Widget::TouchEventType type)
 void BattleScene::createContent()
 {
 	// Create background, su dung _background la grobal
-	createBackground();
+	//createBackground();
+	createBackgroundWithTiledMap();
+
+	/* Neu su dung background thi nhung thiet lap vat ly tai background se khong su dung
+	duoc khi su dung no tai battlescene*/
+	//_background = Background::createBackground();
+	//addChild(_background);
 
 	// create clock battle
 	createClockBattle();
@@ -245,23 +251,23 @@ void BattleScene::createContent()
 	// create skill button
 	createSkillButton();
 
-
+	
 	////////////////////////////////////////////////////////////////
 	// Create main character sprite
 	////////////////////////////////////////////////////////////////
 	_mainCharacter = Character::createCharacterWithId(_selectedCharacterId);
-	_mainCharacter->setPosition(Vec2(_visibleSize.width , 100));
+	_mainCharacter->setPosition(Vec2(_visibleSize.width, 100));
 	_mainCharacter->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
-	_mainCharacter->setPhysicsBody(PhysicsBody::createCircle(50 , PhysicsMaterial(1, 0, 1)));
+	_mainCharacter->setPhysicsBody(PhysicsBody::createCircle(50, PhysicsMaterial(1, 0, 1)));
 	_mainCharacter->getPhysicsBody()->setRotationEnable(false);
 	_mainCharacter->setScale(0.6f);
 
 	_background->addChild(_mainCharacter, 2);
 
+
 	/////////////////////////////////////////////////////////////////
 	// Background follow character
 	/////////////////////////////////////////////////////////////////
-
 	// create follow background
 
 	auto follow = Follow::create(_mainCharacter);
@@ -269,6 +275,37 @@ void BattleScene::createContent()
 	_background->runAction(follow);
 
 
+	/////////////////////////////////////////////////////////////////
+	// create Menu
+	/////////////////////////////////////////////////////////////////
+
+	createMenu();
+
+	/////////////////////////////////////////////////////////////////
+	// create tree and rock
+	/////////////////////////////////////////////////////////////////
+
+	//createRandomRock();
+	//createRandomTree();
+
+	/////////////////////////////////////////////////////////////////
+	// Tao chuong ngai vat
+	/////////////////////////////////////////////////////////////////
+
+
+
+	/////////////////////////////////////////////////////////////////
+	// Tao dich chuyen tuc thoi
+	/////////////////////////////////////////////////////////////////
+
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// MENU
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+void BattleScene::createMenu()
+{
 	/////////////////////////////////////////////////////////////////
 	// create Menu
 	/////////////////////////////////////////////////////////////////
@@ -284,7 +321,7 @@ void BattleScene::createContent()
 	_characterMiniIcon->setPosition(Vec2::ZERO);
 
 	/* Mat na cua clipping node , hinh anh se duoc hien thi theo khuon dang cua mask */
-	auto mask = Sprite::create("image/screen/battle/icon_slot.png"); 
+	auto mask = Sprite::create("image/screen/battle/icon_slot.png");
 	mask->setPosition(Vec2(50, _statusCharacterBar->getContentSize().height / 2));
 	_characterMiniIcon->setStencil(mask);
 
@@ -313,94 +350,80 @@ void BattleScene::createContent()
 	_moveTypeSelectMenu->addTouchEventListener(CC_CALLBACK_2(BattleScene::moveTypeSelectCallback, this));
 
 	addChild(_moveTypeSelectMenu);
-
-
 }
+
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // BACKGROUND
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-void BattleScene::createBackground()
+void BattleScene::createBackgroundWithTiledMap()
 {
-	/////////////////////////////////////////////////////////////////////////////
-	// Version 1: Thiet lap background bang 4 background con
-	/////////////////////////////////////////////////////////////////////////////
-
-	// create background chinh
-	_background = Node::create();
-	_background->setPosition(Vec2::ZERO);
-	addChild(_background);
-	_background->setPhysicsBody(PhysicsBody::createEdgeBox(Size(1, 1), PhysicsMaterial(1, 1, 1)));
-
-	// Xay dung background bang 4 thanh phan chinh
-	auto part1BG = createBackgroundPart(Vec2(_visibleSize.width, _visibleSize.height));
-	part1BG->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
-	_background->addChild(part1BG);
-	auto part2BG = createBackgroundPart(Vec2(_visibleSize.width, _visibleSize.height));
-	part2BG->setAnchorPoint(Vec2::ANCHOR_BOTTOM_RIGHT);
-	_background->addChild(part2BG);
-	auto part3BG = createBackgroundPart(Vec2(_visibleSize.width, _visibleSize.height));
-	part3BG->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
-	_background->addChild(part3BG);
-	auto part4BG = createBackgroundPart(Vec2(_visibleSize.width, _visibleSize.height));
-	part4BG->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
-	_background->addChild(part4BG);
-
-	// Create physicsbody for background
-	createBackgroundBody();
-
 
 	/////////////////////////////////////////////////////////////////////////////
 	// Version 2: Xay dung background bang tilde map
 	/////////////////////////////////////////////////////////////////////////////
+	
+	// create background parent
+	_background = Node::create();
+	_background->setPosition(Vec2::ZERO);
+	addChild(_background);
+	_background->setPhysicsBody(PhysicsBody::createEdgeBox(Size(1, 1), PhysicsMaterial(1 , 1 , 1)));
 
+	// create map with tiledmap
+	string filePath = FileUtils::getInstance()->fullPathForFilename("map/test_batgiac.tmx");
+	_myMap = TMXTiledMap::create(filePath.c_str());
 
+	_background->addChild(_myMap);
+
+	// Lay kich thuoc cua tiledMap
+
+	_myMapSize = _myMap->getContentSize();
+	log("Map Size( %f , %f )", _myMapSize.width, _myMapSize.height);
+
+	for (const auto& child : _myMap->getChildren())
+	{
+		static_cast<SpriteBatchNode*>(child)->getTexture()->setAntiAliasTexParameters();
+	}
+
+	// Map chinh
+	_mapLayer = _myMap->getLayer("main_layer");
+
+	// Su dung de tao body cho map
+	_blockLayer = _myMap->getLayer("block_layer");
+
+	_blockLayer->setVisible(false);
+
+	createMapBorder();
 
 }
 
-/* Khoi tao 1 doi tuong Sprite chinh la 1 phan cua background */
-Sprite* BattleScene::createBackgroundPart(Vec2 pos)
+
+void BattleScene::createMapBorder()
 {
-	auto part = Sprite::create("image/screen/battle/bg.png");
-	part->setPosition(pos);
+	Size blockSize = _blockLayer->getLayerSize();
+	for (int i = 0; i < blockSize.width ; i++)
+	{
+		for (int j = 0; j < blockSize.height ; j++)
+		{
+			auto tiled = _blockLayer->getTileAt(Vec2(i, j));
+			if (tiled != nullptr)
+			{
+				auto tiledBody = PhysicsBody::createBox(tiled->getBoundingBox().size, PhysicsMaterial(1, 1, 0));
+				tiledBody->setRotationEnable(false);
+				tiledBody->setDynamic(false);
+				tiledBody->setGravityEnable(false);
+				tiledBody->setContactTestBitmask(0x1);
+				tiledBody->setCollisionBitmask(0x1);
 
-	return part;
+				tiled->setPhysicsBody(tiledBody);
+				tiled->setTag(102);
+			}
+		}
+	}
 }
 
-/* Khoi tao phusics body cho background */
-void BattleScene::createBackgroundBody()
-{
-	Size hSize = Size(_visibleSize.width * 2, 100);
-	Size vSize = Size(100, _visibleSize.height * 2);
-
-
-	auto bottomBody = createBodyPart(Vec2(_visibleSize.width, 0), hSize);
-	_background->addChild(bottomBody);
-	auto topBody = createBodyPart(Vec2(_visibleSize.width, _visibleSize.height * 2), hSize);
-	_background->addChild(topBody);
-	auto ringhtBody = createBodyPart(Vec2(_visibleSize.width * 2, _visibleSize.height), vSize);
-	_background->addChild(ringhtBody);
-	auto leftBody = createBodyPart(Vec2(0, _visibleSize.height), vSize);
-	_background->addChild(leftBody);
-
-}
-
-/* Khoi tao tung phan cua physics body */
-Node* BattleScene::createBodyPart(Vec2 pos, Size bodySize)
-{
-	auto node = Node::create();
-
-	PhysicsBody* nodeBody = PhysicsBody::createBox(bodySize, PhysicsMaterial(1, 0, 0));
-	nodeBody->setGravityEnable(false); // Khong chiu tac dung cua trong luc
-	nodeBody->setDynamic(false); // Khong chiu tac dung cua dong luc(ko co ma sat, ko co van toc)
-	nodeBody->setContactTestBitmask(0x1);
-
-	node->setPhysicsBody(nodeBody);
-	node->setPosition(pos);
-
-	return node;
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // CLOCK AND MINIMAP
@@ -508,6 +531,36 @@ void BattleScene::skillButtonCallback(Ref* pSender, Widget::TouchEventType type)
 	}
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// CREATE ENERMY
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// CREATE RANDOM ROCK AND TREE
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+void BattleScene::createTower()
+{
+
+}
+
+void BattleScene::createHurdle()
+{
+	// Todo
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// TAO VUNG XOAY DI CHUYEN TUC THOI
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+void BattleScene::createWormHole()
+{
+	// Todo
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // UPDATE EVENT (su dung update de load theo dinh ky cac thanh phan can update lien tuc)
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -564,8 +617,8 @@ void BattleScene::updateMiniMap()
 	if (_mainCharacter == nullptr) return;
 	auto mainPos = _mainCharacter->getPosition();
 
-	float posXScaleRate = (float)(_miniMap->getContentSize().width / (_visibleSize.width * 2));
-	float posYScaleRate = (float)(_miniMap->getContentSize().height / (_visibleSize.height * 2));
+	float posXScaleRate = (float)(_miniMap->getContentSize().width / _myMapSize.width);
+	float posYScaleRate = (float)(_miniMap->getContentSize().height / _myMapSize.height);
 
 	// Cho rect di chuyen theo _mainCharacter, miniIcon la con cua _selectRect nen se di theo cha no
 	_selectRect->setPosition(Vec2(mainPos.x * posXScaleRate, mainPos.y * posYScaleRate));
@@ -606,7 +659,9 @@ bool BattleScene::onTouchBegan(Touch* touch, Event* event)
 		}
 
 		// Thuc hien touch long_move
-		
+		// Su dung lambda cho callfunc, doi tuong su dung callfunc trong truong hop nay la _mainCharacter
+		// [&] la cho phep doi tuong goi ham duoc su dung chinh ban than no trong ham
+		// [=] cho phep doi tuong su dung ban sao cua no
 		auto longTapMoveAction = Sequence::create(DelayTime::create(0.15f), CallFuncN::create([& , touch](Ref* pSender){
 			// Ref* pSender se duoc su dung dynamic_cast
 			// Touch duoc truyen them vao de lay vi tri touch tren miniCircle
@@ -928,4 +983,156 @@ void BattleScene::createMiniCircleAndMiniUnit(int circleLocation)
 	_miniUnit->setScale(0.25f);
 	_miniUnit->setPosition(_miniCircle->getPosition());
 	addChild(_miniUnit , 100);
+}
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+// CODE OLD VERSION
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void BattleScene::createBackground()
+{
+	/////////////////////////////////////////////////////////////////////////////
+	// Version 1: Thiet lap background bang 4 background con
+	/////////////////////////////////////////////////////////////////////////////
+
+	// create background chinh
+	_background = Node::create();
+	_background->setPosition(Vec2::ZERO);
+	addChild(_background);
+	_background->setPhysicsBody(PhysicsBody::createEdgeBox(Size(1, 1), PhysicsMaterial(1, 1, 1)));
+
+	// Xay dung background bang 4 thanh phan chinh
+	auto part1BG = createBackgroundPart(Vec2(_visibleSize.width, _visibleSize.height));
+	part1BG->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
+	_background->addChild(part1BG);
+	auto part2BG = createBackgroundPart(Vec2(_visibleSize.width, _visibleSize.height));
+	part2BG->setAnchorPoint(Vec2::ANCHOR_BOTTOM_RIGHT);
+	_background->addChild(part2BG);
+	auto part3BG = createBackgroundPart(Vec2(_visibleSize.width, _visibleSize.height));
+	part3BG->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
+	_background->addChild(part3BG);
+	auto part4BG = createBackgroundPart(Vec2(_visibleSize.width, _visibleSize.height));
+	part4BG->setAnchorPoint(Vec2::ANCHOR_TOP_RIGHT);
+	_background->addChild(part4BG);
+
+	// Create physicsbody for background
+	createBackgroundBody();
+
+
+
+}
+
+
+/* Khoi tao 1 doi tuong Sprite chinh la 1 phan cua background */
+
+Sprite* BattleScene::createBackgroundPart(Vec2 pos)
+{
+	auto part = Sprite::create("image/screen/battle/bg.png");
+	part->setPosition(pos);
+
+	return part;
+}
+
+
+/* Khoi tao phusics body cho background */
+
+void BattleScene::createBackgroundBody()
+{
+	Size hSize = Size(_visibleSize.width * 2, 100);
+	Size vSize = Size(100, _visibleSize.height * 2);
+
+
+	auto bottomBody = createBodyPart(Vec2(_visibleSize.width, 0), hSize);
+	_background->addChild(bottomBody);
+	auto topBody = createBodyPart(Vec2(_visibleSize.width, _visibleSize.height * 2), hSize);
+	_background->addChild(topBody);
+	auto ringhtBody = createBodyPart(Vec2(_visibleSize.width * 2, _visibleSize.height), vSize);
+	_background->addChild(ringhtBody);
+	auto leftBody = createBodyPart(Vec2(0, _visibleSize.height), vSize);
+	_background->addChild(leftBody);
+
+}
+
+
+/* Khoi tao tung phan cua physics body */
+
+Node* BattleScene::createBodyPart(Vec2 pos, Size bodySize)
+{
+	auto node = Node::create();
+
+	PhysicsBody* nodeBody = PhysicsBody::createBox(bodySize, PhysicsMaterial(1, 0, 0));
+	nodeBody->setGravityEnable(false); // Khong chiu tac dung cua trong luc
+	nodeBody->setDynamic(false); // Khong chiu tac dung cua dong luc(ko co ma sat, ko co van toc)
+	nodeBody->setContactTestBitmask(0x1);
+
+	node->setPhysicsBody(nodeBody);
+	node->setPosition(pos);
+
+	return node;
+}
+
+
+/*
+Tao va xu ly body phuc tap:
+http://laptrinhgamecocos2dx.blogspot.jp/2014/05/bai-13-tao-khung-vat-ly-cua-doi-tuong-phuc-tap-bang-phan-mem-physicbody-editor.html
+*/
+
+void BattleScene::createRandomRock()
+{
+	Texture2D* textureRock = Director::getInstance()->getTextureCache()->addImage("map/stone.png");
+
+	for (int i = 0; i < 5; i++)
+	{
+		auto rock = Sprite::createWithTexture(textureRock);
+		MyBodyParser::getInstance()->parseJsonFile("json/stone.json");
+		auto rockBody = MyBodyParser::getInstance()->bodyFormJson(rock, "stone");
+
+		if (rockBody != nullptr)
+		{
+			rockBody->setDynamic(false);
+			rockBody->setGravityEnable(false);
+			rockBody->setContactTestBitmask(0x1);
+			rock->setPhysicsBody(rockBody);
+
+			rock->setTag(ROCK_TAG);
+			rock->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
+			rock->setPosition(Vec2(random(0.1f, 0.9f) * _visibleSize.width * 2, random(0.1f, 0.9f) * _visibleSize.height * 2));
+
+			_allRock.push_back(rock);
+			_background->addChild(_allRock.back(), 2);
+		}
+
+	}
+}
+
+void BattleScene::createRandomTree()
+{
+	Texture2D* textureTree = Director::getInstance()->getTextureCache()->addImage("map/tree.png");
+
+	for (int i = 0; i < 5; i++)
+	{
+		auto tree = Sprite::createWithTexture(textureTree);
+		MyBodyParser::getInstance()->parseJsonFile("json/tree.json");
+		auto treeBody = MyBodyParser::getInstance()->bodyFormJson(tree, "tree");
+
+		if (treeBody != nullptr)
+		{
+			treeBody->setDynamic(false);
+			treeBody->setGravityEnable(false);
+			treeBody->setContactTestBitmask(0x1);
+			tree->setPhysicsBody(treeBody);
+
+			tree->setTag(TREE_TAG);
+			tree->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
+			tree->setPosition(Vec2(random(0.1f, 0.9f) * _visibleSize.width * 2, random(0.1f, 0.9f) * _visibleSize.height * 2));
+
+			_allTree.push_back(tree);
+			_background->addChild(_allTree.back(), 2);
+		}
+
+	}
 }

@@ -11,6 +11,8 @@
 #include "ModeSelectScene/ModeSelectScene.h"
 #include "Object/Character/Character.h"
 #include "Object/MiniCircle/MiniCircle.h"
+#include "Object/Background/Background.h"
+#include "ClassBase/MyBodyParser.h"
 
 
 USING_NS_CC;
@@ -108,10 +110,22 @@ private :
 	virtual void createBackground();
 	virtual Sprite* createBackgroundPart(Vec2 pos);
 	
+	virtual void createMenu();
 
 	/* Physicsbody */
 	void createBackgroundBody();
 	Node* createBodyPart(Vec2 pos, Size bodySize);
+
+	/* Create background with TitledMap */
+	TMXTiledMap* _myMap;
+	TMXLayer* _mapLayer;
+	TMXLayer* _blockLayer;
+
+	Size _myMapSize;
+	
+
+	void createBackgroundWithTiledMap();
+	void createMapBorder();
 
 	/*Init method*/
 	void setPhysicsWorldToLayer(PhysicsWorld* myWorld);
@@ -179,6 +193,23 @@ private :
 	bool _checkFirstCreateMiniCircleFlg = false;
 	bool _checkOneTapMoveFlg = false;
 	bool _checkLongTapMoveFlg = false;
+
+	////////////////////////////////////////////////
+	// CREATE RANDOM ROCK, TREE
+	////////////////////////////////////////////////
+	vector<Sprite*> _allRock;
+	vector<Sprite*> _allTree;
+
+	void createRandomRock();
+	void createRandomTree();
+	void createTower();
+	void createHurdle();
+
+	////////////////////////////////////////////////
+	// CREATE WORM HOLE
+	////////////////////////////////////////////////
+
+	void createWormHole();
 
 };
 

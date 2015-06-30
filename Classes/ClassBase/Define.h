@@ -36,6 +36,9 @@ using namespace std;
 #define LONGTAP_MOVE_ACTION 11
 #define MOVE_DISTANCE 300
 
+#define ROCK_TAG 2
+#define TREE_TAG 3
+
 
 struct UserInfo
 {
