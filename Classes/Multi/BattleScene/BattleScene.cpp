@@ -87,6 +87,20 @@ bool BattleScene::init(int selectedUnitId)
 			_moveCircleType = UserDefault::getInstance()->getIntegerForKey(MOVE_CIRCLE_TYPE);
 
 			log("Move Mode: %d , Local(4:left , 5:right) : %d , Type(6:Time, 7:Distance): %d ", _moveMode, _moveCircleLocation, _moveCircleType);
+
+
+			if (_moveCircleLocation != 0)
+			{
+				if (_checkFirstCreateMiniCircleFlg == true && _miniCircle != nullptr)
+				{
+					_miniCircle->removeFromParentAndCleanup(true);
+					_miniUnit->removeFromParentAndCleanup(true);
+					_checkFirstCreateMiniCircleFlg = false;
+				}
+				
+				createMiniCircleAndMiniUnit(_moveCircleLocation);
+			}
+
 		}
 	}
 
@@ -445,21 +459,21 @@ void BattleScene::createSkillButton()
 	_skill1UnitBtn = Button::create();
 	_skill1UnitBtn->setTag(SKILL_TAG_1);
 	_skill1UnitBtn->loadTextureNormal(skill1ImagePath.c_str());
-	_skill1UnitBtn->setPosition(Vec2(_visibleSize.width / 2 - 210 , _skill1UnitBtn->getContentSize().height/2 + 20));
+	_skill1UnitBtn->setPosition(Vec2(_visibleSize.width / 2 - 180 , _skill1UnitBtn->getContentSize().height/2 + 10));
 	_skill1UnitBtn->addTouchEventListener(CC_CALLBACK_2(BattleScene::skillButtonCallback, this));
 	addChild(_skill1UnitBtn);
 
 	_skill2UnitBtn = Button::create();
 	_skill2UnitBtn->setTag(SKILL_TAG_2);
 	_skill2UnitBtn->loadTextureNormal(skill2ImagePath.c_str());
-	_skill2UnitBtn->setPosition(Vec2(_visibleSize.width / 2 - 70, _skill2UnitBtn->getContentSize().height / 2 + 20));
+	_skill2UnitBtn->setPosition(Vec2(_visibleSize.width / 2 - 60, _skill2UnitBtn->getContentSize().height / 2 + 10));
 	_skill2UnitBtn->addTouchEventListener(CC_CALLBACK_2(BattleScene::skillButtonCallback, this));
 	addChild(_skill2UnitBtn);
 
 	_skill3SelectedBtn = Button::create();
 	_skill3SelectedBtn->setTag(SKILL_TAG_3);
 	_skill3SelectedBtn->loadTextureNormal(skill3ImagePath.c_str());
-	_skill3SelectedBtn->setPosition(Vec2(_visibleSize.width / 2 + 70, _skill3SelectedBtn->getContentSize().height / 2 + 20));
+	_skill3SelectedBtn->setPosition(Vec2(_visibleSize.width / 2 + 60, _skill3SelectedBtn->getContentSize().height / 2 + 10));
 	_skill3SelectedBtn->addTouchEventListener(CC_CALLBACK_2(BattleScene::skillButtonCallback, this));
 	addChild(_skill3SelectedBtn);
 
@@ -467,7 +481,7 @@ void BattleScene::createSkillButton()
 	_skill4SelectedBtn->setTag(SKILL_TAG_4);
 	_skill4SelectedBtn->loadTextureNormal(skill4ImagePath.c_str());
 	_skill4SelectedBtn->addTouchEventListener(CC_CALLBACK_2(BattleScene::skillButtonCallback, this));
-	_skill4SelectedBtn->setPosition(Vec2(_visibleSize.width / 2 + 210, _skill4SelectedBtn->getContentSize().height / 2 + 20));
+	_skill4SelectedBtn->setPosition(Vec2(_visibleSize.width / 2 + 180, _skill4SelectedBtn->getContentSize().height / 2 + 10));
 	addChild(_skill4SelectedBtn);
 
 
@@ -572,6 +586,56 @@ bool BattleScene::onTouchBegan(Touch* touch, Event* event)
 		_touchMoveBeginSprite->setVisible(true);
 	}
 
+	if (_moveMode == MOVE_CIRCLE)
+	{
+		log("TH3 : Move Circle");
+		 // Kiem tra truong hop touch ngoai vong tron thi khong thuc hien
+		if (_miniCircle->isTapped(touch->getLocation()))
+		{
+			_touchMoveBeginSprite->setPosition(_miniCircle->getPosition());
+			_touchMoveBeginSprite->setVisible(true);
+
+			_touchMoveEndSprite->setPosition(touch->getLocation());
+			_touchMoveEndSprite->setVisible(true);
+		}
+		else
+		{
+			// Neu truong hop touch circle khong duoc thuc hien trong vong tron thi se ko thuc hien duoc
+			log("++++++++++++++++++++++++");
+			return false;
+		}
+
+		// Thuc hien touch long_move
+		
+		auto longTapMoveAction = Sequence::create(DelayTime::create(0.15f), CallFuncN::create([& , touch](Ref* pSender){
+			// Ref* pSender se duoc su dung dynamic_cast
+			// Touch duoc truyen them vao de lay vi tri touch tren miniCircle
+			//auto mainObj = dynamic_cast<Character*>(pSender);
+			_mainCharacter->setMoveMode(4);
+			auto moveVector = touch->getLocation() - _miniCircle->getPosition();
+
+			_mainCharacter->setCharacterMoveSpeed(250);
+			_mainCharacter->actionMoveByVector(moveVector);
+
+			_checkOneTapMoveFlg = true;
+			_checkLongTapMoveFlg = true;
+
+			_miniIcon->setRotation(-(moveVector.getAngle() * RAD_DEG) + 90);
+
+			int direct = _mainCharacter->getDirectionWithAngle(-(moveVector.getAngle() * RAD_DEG) + 90);
+
+			if (direct != 0)
+			{
+				_miniUnit->actionRotateWithDirection(direct);
+			}
+
+		}) , nullptr);
+
+		longTapMoveAction->setTag(LONGTAP_MOVE_ACTION);
+		_mainCharacter->runAction(longTapMoveAction);
+
+	}
+
 	return true;
 }
 
@@ -580,54 +644,176 @@ void BattleScene::onTouchMoved(Touch* touch, Event* event)
 	
 
 	/* Lay vector tu diem touch den diem move*/
-	auto vectorMove = touch->getLocation() - _touchStartPoint;
+	Vec2 vectorMove;
+	if (_moveMode == MOVE_MANUAL)
+	{
+		vectorMove = touch->getLocation() - _touchStartPoint;
+	}
+	if (_moveMode == MOVE_CIRCLE)
+	{
+		vectorMove = touch->getLocation() - _miniCircle->getPosition();
+	}
 
-	// Add 2 vong tron vao che do chuyen dong manual
-	//if (_moveMode == MOVE_MANUAL)
-	//{
+
+	// Xu ly truong hop ngon tay khi cham,se chuyen touchBegin thanh touchMove
+	// Test tren Win32 thi se khong gap truong hop nay neu touchOne , nhung neu test tren tanmatsu thi se nhay vao day
+	// Nen can check do rong cua ngon tay touc
+	if ((touch->getLocation() - _touchStartPoint).length() < 20) {
+		_checkOneTapMoveFlg = false;
+		return;
+	}
+	
+	/////////////////////////////////////////////////////////////////////////
+	// Xu ly hien thi vong tron di chuyen cho cac truong hop touch and move
+	/////////////////////////////////////////////////////////////////////////
+	if (_moveMode == MOVE_MANUAL) {
 		_touchMoveEndSprite->setVisible(true);
 		if (vectorMove.length() < 200) {
 			_touchMoveEndSprite->setPosition(touch->getLocation());
 		}
 		else {
-			// Gioi han chi cho endSprite di chuyen cach beginSprite 1 khoang toi da la 200
 			_touchMoveEndSprite->setPosition(_touchStartPoint + Vec2(200 * cos(vectorMove.getAngle()), 200 * sin(vectorMove.getAngle())));
 		}
+	}
 
-		// Neu touch vao trong beginSprite thi se dung lai
-		if (vectorMove.length() < _touchMoveBeginSprite->getContentSize().width / 6)
-		{
-			// Thuc hien stop action move
-			_mainCharacter->stopMoveAction();
-			return;
+	if (_moveMode == MOVE_CIRCLE) {
+		_touchMoveEndSprite->setVisible(true);
 
+		if (_miniCircle->isTapped(touch->getLocation())) {
+			_touchMoveEndSprite->setPosition(touch->getLocation());
 		}
-	//}
+		else {
+			_touchMoveEndSprite->setPosition(_miniCircle->getPosition() + Vec2(_miniCircle->getMiniCircleAfterScaleX() / 2 * cos(vectorMove.getAngle()), _miniCircle->getMiniCircleAfterScaleY() / 2 * sin(vectorMove.getAngle())));
+		}
+	}
 
 
+	/////////////////////////////////////////////////////////////////////////
+	// Xu ly logic di chuyen cho cac truong hop touch and move
+	/////////////////////////////////////////////////////////////////////////
 
-	// Di chuyen theo diem touch move
-	_mainCharacter->setCharacterMoveSpeech(250);
-	_mainCharacter->createMoveActionByVector(vectorMove);
+	// Di vao ben trong vong tron thi se ko di chuyen tiep,su dung cho ca move_manual && move_circle_manual
+	if (vectorMove.length() < _touchMoveBeginSprite->getContentSize().width / 6 && _moveMode != MOVE_CIRCLE) {
+		_mainCharacter->actionStopMove();
+		return;
+	}
 
-	/* Thuc hien tinh direction theo goc vua lay*/
-	int direct = _mainCharacter->getDirectionWithAngle(-(vectorMove.getAngle() * RAD_DEG) + 90);
-	_miniIcon->setRotation(-(vectorMove.getAngle() * RAD_DEG) + 90);
+	/////////////////MOVE WITH TESTOBJECT
+	_mainCharacter->stopAllActionsByTag(LONGTAP_MOVE_ACTION);
+	if (_moveMode == MOVE_MANUAL || _moveMode == MOVE_CIRCLE) {
+		_checkOneTapMoveFlg = true;
+		
+		_mainCharacter->setMoveMode(_moveMode);
+		
+		// Di chuyen theo diem touch move
+		_mainCharacter->setCharacterMoveSpeed(250);
+		_mainCharacter->actionMoveByVector(vectorMove);
+
+		int direct = _mainCharacter->getDirectionWithAngle(-(vectorMove.getAngle() * RAD_DEG) + 90);
+		_miniIcon->setRotation(-(vectorMove.getAngle() * RAD_DEG) + 90);
+		if (direct != 0)
+		{
+			if (_moveMode == MOVE_CIRCLE)
+			{
+				_miniUnit->actionRotateWithDirection(direct); // Xoay miniUnit
+			}
+		}
+	}
+	
 }
 
 void BattleScene::onTouchEnded(Touch* touch, Event* event)
 {
 	_touchMoveBeginSprite->setVisible(false);
 	_touchMoveEndSprite->setVisible(false);
-	if (_moveMode == MOVE_MANUAL)
+
+	/////////////////////////////////////////////////////////////////////////
+	// LOGIC
+	/////////////////////////////////////////////////////////////////////////
+	_mainCharacter->stopAllActionsByTag(LONGTAP_MOVE_ACTION);
+	if ((_moveMode == MOVE_MANUAL) || (_moveMode == MOVE_CIRCLE && _checkOneTapMoveFlg == true) || (_moveMode == MOVE_CIRCLE && _checkLongTapMoveFlg == true))
 	{
-		//_touchMoveBeginSprite->setVisible(false);
-		//_touchMoveEndSprite->setVisible(false);
+		/* Day la truong hop MOVE_MANUAL || MOVE_CIRCLE_MANUAL || MOVE_CIRCLE_LONGTAP */
+		_mainCharacter->actionStopMove();
+		if (_moveMode == MOVE_CIRCLE)
+		{
+			_miniUnit->actionStopMove();
+
+		}
+
+		_checkOneTapMoveFlg = false;
+		_checkLongTapMoveFlg = false;
+
+		return;
 	}
-	_mainCharacter->stopMoveAction();
+	else
+	{
+		if (_moveMode == MOVE_AUTO)
+		{
+			_mainCharacter->setMoveMode(_moveMode);
+			Vec2 moveVector = touch->getLocation() - Vec2(_visibleSize / 2);
 
+			_mainCharacter->actionStopMove();
+			Vect force = Vect(250 * cos(moveVector.getAngle()), 250 * sin(moveVector.getAngle()));
+			_mainCharacter->getPhysicsBody()->applyImpulse(force * 9000);
 
+		}
+
+		
+		if (_moveMode == MOVE_CIRCLE)
+		{
+			if (_miniCircle->isTapped(touch->getLocation()))
+			{
+
+				log("Day la oneTap circle");
+
+				_mainCharacter->setMoveMode(5);
+				_miniUnit->setMoveMode(5);
+
+				_mainCharacter->setCharacterMoveSpeed(250);
+
+				float moveTime;
+				// Moi lan Tap di chuyen trong 1s
+				if (_moveCircleType == MOVE_CIRCLE_TIME)
+				{
+					moveTime = 1;
+				}
+				// Moi lan tap di chuyen duoc 1 doan distance
+				if (_moveCircleType == MOVE_CIRCLE_DISTANCE)
+				{
+					moveTime = (float)(MOVE_DISTANCE /_mainCharacter->getCharacterMoveSpeed());
+				}
+
+				_mainCharacter->setMoveOneTapTime(moveTime);
+				_miniUnit->setMoveOneTapTime(moveTime);
+				Vec2 space = (touch->getLocation() - _miniCircle->getPosition());
+
+				_miniIcon->setRotation(-(space.getAngle() * RAD_DEG) + 90);
+
+				_mainCharacter->actionMoveByVector(space);
+				_miniUnit->actionMoveByVector(space);
+
+			}
+			else
+			{
+				return;
+			}
+		}
+	}
 }
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// COLIISITION EVENT
+//////////////////////////////////////////////////////////////////////////////////////////////
+bool BattleScene::onContactBegin(PhysicsContact &contact)
+{
+	PhysicsBody* bodyA = contact.getShapeA()->getBody();
+	PhysicsBody* bodyB = contact.getShapeB()->getBody();
+
+	return true;
+}
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -674,6 +860,27 @@ void BattleScene::moveTypeSelectDecideCallback(Ref* pSender, Widget::TouchEventT
 			log("Circle location: %d(4-Left , 5-Right) ", _moveCircleLocation);
 			_moveCircleType = UserDefault::getInstance()->getIntegerForKey(MOVE_CIRCLE_TYPE);
 			log("Circle location: %d(6-Time , 7-Distance) ", _moveCircleType);
+
+			if (_moveCircleLocation != 0)
+			{
+				if (_checkFirstCreateMiniCircleFlg == true && _miniCircle != nullptr)
+				{
+					_miniCircle->removeFromParentAndCleanup(true);
+					_miniUnit->removeFromParentAndCleanup(true);
+					_checkFirstCreateMiniCircleFlg = false;
+				}
+				
+				createMiniCircleAndMiniUnit(_moveCircleLocation);
+			}
+		}
+		else
+		{
+			if (_checkFirstCreateMiniCircleFlg == true && _miniCircle != nullptr)
+			{
+				_miniCircle->removeFromParentAndCleanup(true);
+				_miniUnit->removeFromParentAndCleanup(true);
+				_checkFirstCreateMiniCircleFlg = false;
+			}
 		}
 		break;
 	}
@@ -701,4 +908,24 @@ void BattleScene::moveTypeSelectCancelCallback(Ref* pSender, Widget::TouchEventT
 	default:
 		break;
 	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// CREATE MINI_CIRCLE AND MINI_UNIT
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+void BattleScene::createMiniCircleAndMiniUnit(int circleLocation)
+{
+	// Create miniCircle
+	_miniCircle = MiniCircle::createMiniCircle(circleLocation);
+	addChild(_miniCircle, 100);
+
+	// Su dung flag nay de khong remove miniCircle lan dau tien khoi tao
+	_checkFirstCreateMiniCircleFlg = true;
+
+	// Create miniUnit
+	_miniUnit = Character::createCharacterWithId(_selectedCharacterId);
+	_miniUnit->setScale(0.25f);
+	_miniUnit->setPosition(_miniCircle->getPosition());
+	addChild(_miniUnit , 100);
 }

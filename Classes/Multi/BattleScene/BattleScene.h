@@ -10,6 +10,7 @@
 #include "MoveTypeSelectDialog.h"
 #include "ModeSelectScene/ModeSelectScene.h"
 #include "Object/Character/Character.h"
+#include "Object/MiniCircle/MiniCircle.h"
 
 
 USING_NS_CC;
@@ -24,6 +25,24 @@ public :
 	virtual bool init(int selectedUnitId);
 
 private :
+
+	////////////////////////////////////////////////////////////////////////
+	// XAY DUNG THUOC TINH
+	////////////////////////////////////////////////////////////////////////
+
+	///////////////////////////////////////////////
+	// CREATE DATABASE
+	///////////////////////////////////////////////
+
+	/* Get data from database */
+	vector<SkillInfo> _allSkillSelectedInfo; // Cac skill duoc unit lua chon
+	// Thuc ra character duoc lua chon chinh la tuong trong tran dau
+	UnitInfo _allUnitSelectedInfo; // Unit duoc lua chon
+
+	/////////////////////////////////////////////////
+	// CREATE BACKGROUND AND CONTENT
+	/////////////////////////////////////////////////
+	
 	/*PhysicsWorld*/
 	PhysicsWorld* _myWorld;
 
@@ -31,20 +50,6 @@ private :
 	Node* _background;
 	std::string _imagePath;
 
-	/* Get data from database */
-	vector<SkillInfo> _allSkillSelectedInfo; // Cac skill duoc unit lua chon
-	// Thuc ra character duoc lua chon chinh la tuong trong tran dau
-	UnitInfo _allUnitSelectedInfo; // Unit duoc lua chon
-
-	/*Character*/
-	Character* _mainCharacter;
-	vector<SkillInfo> _skillUnitList;
-	vector<SkillInfo> _skillUnitSelected;
-	void createCharacterImageById(int unitId);
-
-	int _selectedCharacterId;
-
-	Character* _test;
 
 	/*Status bar*/
 	Sprite* _statusCharacterBar;
@@ -60,16 +65,43 @@ private :
 	Sprite* _selectRect;
 	Sprite* _miniIcon;
 
-	/* Get time system */
+	/* Battle Clock */
 	time_t timer;
 	struct tm * timeInfo;
 	Sprite* _timeViewSprite;
+
+
+	////////////////////////////////////////////////
+	// CREATE CHARACTER
+	////////////////////////////////////////////////
+
+	/*Character*/
+	Character* _mainCharacter;
+	vector<SkillInfo> _skillUnitList;
+	vector<SkillInfo> _skillUnitSelected;
+	void createCharacterImageById(int unitId);
+
+	int _selectedCharacterId;
+
+
+	////////////////////////////////////////////////////////////////////////
+	// METHOD
+	////////////////////////////////////////////////////////////////////////
+
+	////////////////////////////////////////////////
+	// BACKGROUND AND CONTENT
+	////////////////////////////////////////////////
+
+	/* Get time system */
 	virtual std::string convertToTimeString(int time);
 	virtual void createClockBattle();
 	virtual void createMiniMap();
 
 	/* Create Debug content */
 	virtual void createDebugContent();
+	/* Debug version setup */
+	void debugPhysicsButtonCallback(Ref* pSender, Widget::TouchEventType type);
+	void menuButtonCallback(Ref* pSender, Widget::TouchEventType type);
 	
 	/*Create content battlescene*/
 	virtual void createContent();
@@ -89,7 +121,10 @@ private :
 	virtual void updateMiniMap();
 
 
-	/*Touch variable*/
+	////////////////////////////////////////////////
+	// TOUCH EVENT
+	////////////////////////////////////////////////
+
 	Vec2 _touchStartPoint;
 	Sprite *_touchMoveBeginSprite;
 	Sprite *_touchMoveEndSprite;
@@ -98,10 +133,10 @@ private :
 	virtual void onTouchMoved(Touch* touch, Event* event);
 	virtual void onTouchEnded(Touch* touch, Event* event);
 
-	/* Debug version setup */
-	void debugPhysicsButtonCallback(Ref* pSender, Widget::TouchEventType type);
-	void menuButtonCallback(Ref* pSender, Widget::TouchEventType type);
-
+	
+	////////////////////////////////////////////////
+	// CHARACTER MOVE MODE
+	////////////////////////////////////////////////
 	/* Move type */
 	int _moveMode;
 	int _moveCircleLocation;
@@ -112,6 +147,11 @@ private :
 	virtual void moveTypeSelectDecideCallback(Ref* pSender, Widget::TouchEventType type);
 	virtual void moveTypeSelectCancelCallback(Ref* pSender, Widget::TouchEventType type);
 
+
+	////////////////////////////////////////////////
+	// CHARACTER SKILL
+	////////////////////////////////////////////////
+
 	/* Skill button */
 	Button* _skill1UnitBtn;
 	Button* _skill2UnitBtn;
@@ -119,6 +159,27 @@ private :
 	Button* _skill4SelectedBtn;
 	virtual void createSkillButton();
 	virtual void skillButtonCallback(Ref* pSender, Widget::TouchEventType type);
+
+
+	////////////////////////////////////////////////
+	// COLLISITION EVENT
+	////////////////////////////////////////////////
+
+	bool onContactBegin(PhysicsContact &contact);
+
+
+	////////////////////////////////////////////////
+	// CREATE CIRCLE MINI
+	////////////////////////////////////////////////
+
+	MiniCircle* _miniCircle;
+	Character* _miniUnit;
+	void createMiniCircleAndMiniUnit(int circleLocation);
+	// Flag check lan dau tao miniCircle, 
+	bool _checkFirstCreateMiniCircleFlg = false;
+	bool _checkOneTapMoveFlg = false;
+	bool _checkLongTapMoveFlg = false;
+
 };
 
 #endif // _BATTLESCENE_H_

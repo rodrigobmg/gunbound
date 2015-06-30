@@ -63,22 +63,64 @@ void Character::createImagePathByUnitId(int characterId)
 // Thuc hien moveAction method
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-void Character::createMoveActionByVector(Vec2 moveVector)
+void Character::actionMoveByVector(Vec2 moveVector)
 {
 	int direction = getDirectionWithAngle(-(moveVector.getAngle() * RAD_DEG) + 90);
-
-	this->getPhysicsBody()->setVelocity(Vect(this->getCharacterMoveSpeech() * cos(moveVector.getAngle()) , this->getCharacterMoveSpeech() * sin(moveVector.getAngle())));
 	
-	if (direction != 0)
+	switch (this->getMoveMode())
 	{
-		actionRotateWithDirectionIndex(direction);
+		case 1: // MOVE_AUTO
+			break;
+		case 2: // MOVE_MANUAL
+		case 3: // MOVE_CIRCLE_MANUAL
+		case 4: // MOVE_CIRCLE_LONGTAP
+			this->getPhysicsBody()->setVelocity(Vect(this->getCharacterMoveSpeed() * cos(moveVector.getAngle()), this->getCharacterMoveSpeed() * sin(moveVector.getAngle())));
+
+			if (direction != 0)
+			{
+				actionRotateWithDirection(direction);
+			}
+			break;
+		case 5: // MOVE_CIRCLE_ONETAP
+		{
+			this->stopActionByTag(101);
+
+			auto actionOneTap = Sequence::create(DelayTime::create(this->getMoveOneTapTime()), CallFuncN::create([&](Ref* pSender){
+				this->actionStopMove();
+			}), nullptr);
+
+			actionOneTap->setTag(101);
+
+			this->runAction(actionOneTap);
+
+			if (this->getPhysicsBody() != nullptr)
+			{
+				this->getPhysicsBody()->setVelocity(Vect(this->getCharacterMoveSpeed() * cos(moveVector.getAngle()), this->getCharacterMoveSpeed() * sin(moveVector.getAngle())));
+			}
+			if (direction != 0)
+			{
+				actionRotateWithDirection(direction);
+			}
+
+			break;
+		}
+		default:
+			break;
 	}
+
+
+
+	
 }
 
 
-void Character::stopMoveAction()
+void Character::actionStopMove()
 {
-	this->getPhysicsBody()->setVelocity(Vect::ZERO);
+	if (this->getPhysicsBody() != nullptr)
+	{
+		this->getPhysicsBody()->setVelocity(Vect::ZERO);
+	}
+
 	this->stopActionByTag(this->getCurrentMoveAnimation());
 }
 
@@ -118,7 +160,7 @@ bool Character::getDetectAngleFlg(int offset, float angle)
 //XU LY MOVE & ATTACK ANIMATION
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-void Character::actionRotateWithDirectionIndex(int directionIndex)
+void Character::actionRotateWithDirection(int directionIndex)
 {
 	log("Direct: %d ", directionIndex);
 	/* Kiem tra neu van la action cu thi ko stop no lai*/

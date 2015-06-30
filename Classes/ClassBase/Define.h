@@ -21,6 +21,21 @@ using namespace std;
 #define SKILL_TAG_3 3
 #define SKILL_TAG_4 4
 
+#define MOVEKEY "MOVE_MODE"
+#define MOVE_CIRCLE_LOCATION "MOVE_CIRCLE_LOCATION"
+#define MOVE_CIRCLE_TYPE "MOVE_CIRCLE_TYPE"
+#define MOVE_AUTO 1
+#define MOVE_MANUAL 2
+#define MOVE_CIRCLE 3
+#define MOVE_CIRCLE_LEFT 4
+#define MOVE_CIRCLE_RIGHT 5
+#define MOVE_CIRCLE_TIME 6
+#define MOVE_CIRCLE_DISTANCE 7
+#define MINICIRCLE_SCALE 1/3;
+
+#define LONGTAP_MOVE_ACTION 11
+#define MOVE_DISTANCE 300
+
 
 struct UserInfo
 {

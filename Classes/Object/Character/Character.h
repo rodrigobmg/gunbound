@@ -19,7 +19,9 @@ public:
 
 	CC_SYNTHESIZE(string, _imagePath, ImagePath);
 	CC_SYNTHESIZE(int, _currentMoveAnimation, CurrentMoveAnimation);
-	CC_SYNTHESIZE(float, _characterMoveSpeech, CharacterMoveSpeech );
+	CC_SYNTHESIZE(float, _characterMoveSpeech, CharacterMoveSpeed );
+	CC_SYNTHESIZE(int, _moveMode, MoveMode);
+	CC_SYNTHESIZE(float, _moveOneTapTime, MoveOneTapTime);
 
 	Sprite* _characterSprite;
 
@@ -29,7 +31,7 @@ public:
 	/* Flag dung de xac dinh goc */
 	bool getDetectAngleFlg(int offset, float angle);
 	/* Thuc hien animation xoay character theo direction */
-	void actionRotateWithDirectionIndex(int directionIndex);
+	void actionRotateWithDirection(int directionIndex);
 
 	// Tao 1 doi tuong animation thuc hien hanh dong di chuyen duoc xay dung bang anh
 	Animation* createMoveAnimationCharacterWithImage(int imageId , string imagePath);
@@ -37,8 +39,8 @@ public:
 	// Tao 1 doi tuong animation thuc hien hanh dong di chuyen duoc xay dung bang anh
 	Animation* createAttackAnimationCharacterWithImage(int imageId);
 
-	void createMoveActionByVector(Vec2 moveVector);
-	void stopMoveAction();
+	void actionMoveByVector(Vec2 moveVector);
+	void actionStopMove();
 
 };
 
