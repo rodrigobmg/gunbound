@@ -204,12 +204,23 @@ private :
 	void createRandomTree();
 	void createTower();
 	void createHurdle();
+	Sprite* createHurdlePart(Texture2D *wallTexture, Vec2 pos);
 
 	////////////////////////////////////////////////
-	// CREATE WORM HOLE
+	// CREATE WORM HOLE(Lo den khong gian)
 	////////////////////////////////////////////////
+
+	vector<Sprite*> _wormHoleList;
+
 
 	void createWormHole();
+	void closeWormHole(int inGate , int outGate);
+	void openWormHole(int inGate , int outGate);
+	void checkWormHoleWorking();
+
+	////////////////////////////////////////////////
+	// Thuc hien viec to mau khi di chuyen
+	////////////////////////////////////////////////
 
 };
 

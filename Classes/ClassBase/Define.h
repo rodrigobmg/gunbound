@@ -39,6 +39,9 @@ using namespace std;
 #define ROCK_TAG 2
 #define TREE_TAG 3
 
+#define WORMHOLE_ROTATE_ACTION 1122
+#define BOUND_BORDER_TAG 1202
+
 
 struct UserInfo
 {

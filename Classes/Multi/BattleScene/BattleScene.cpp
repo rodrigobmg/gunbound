@@ -153,79 +153,6 @@ void BattleScene::onEnter()
 	this->schedule(schedule_selector(BattleScene::updateTimeView), 1.0f );
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////
-// Debug Cotnent
-//////////////////////////////////////////////////////////////////////////////////////////////
-
-void BattleScene::createDebugContent()
-{
-	auto physicsBodyDebugBtn = Button::create();
-	physicsBodyDebugBtn->loadTextureNormal("test.png");
-	physicsBodyDebugBtn->setPosition(Vec2(_visibleSize.width - 50, 70));
-	physicsBodyDebugBtn->setTouchEnabled(true);
-	physicsBodyDebugBtn->addTouchEventListener(CC_CALLBACK_2(BattleScene::debugPhysicsButtonCallback, this));
-	addChild(physicsBodyDebugBtn, 10);
-
-	auto menuDebugBtn = Button::create();
-	menuDebugBtn->loadTextureNormal("test.png");
-	menuDebugBtn->setPosition(Vec2(_visibleSize.width - 100, 70));
-	menuDebugBtn->setTouchEnabled(true);
-	menuDebugBtn->addTouchEventListener(CC_CALLBACK_2(BattleScene::menuButtonCallback, this));
-	addChild(menuDebugBtn, 10);
-}
-
-// Button debug physics callback
-void BattleScene::debugPhysicsButtonCallback(Ref* pSender, Widget::TouchEventType type)
-{
-	log("Debug Physics Callback");
-	switch (type)
-	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::ENDED:
-	{
-		// Neu on -> off , off -> on
-		if (_myWorld->getDebugDrawMask() == PhysicsWorld::DEBUGDRAW_ALL)
-		{
-			_myWorld->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_NONE);
-		}
-		else
-		{
-			_myWorld->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
-		}
-		break;
-
-	}case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
-	default:
-		break;
-	}
-}
-
-// Chuyen ve trang ModeSelectScene
-void BattleScene::menuButtonCallback(Ref* pSender, Widget::TouchEventType type)
-{
-	log("Debug Menu Callback");
-	switch (type)
-	{
-	case cocos2d::ui::Widget::TouchEventType::BEGAN:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::MOVED:
-		break;
-	case cocos2d::ui::Widget::TouchEventType::ENDED:
-	{
-		Director::getInstance()->replaceScene(ModeSelectScene::createScene());
-		break;
-
-	}case cocos2d::ui::Widget::TouchEventType::CANCELED:
-		break;
-	default:
-		break;
-	}
-}
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // BattleScene Content
@@ -233,8 +160,10 @@ void BattleScene::menuButtonCallback(Ref* pSender, Widget::TouchEventType type)
 
 void BattleScene::createContent()
 {
-	// Create background, su dung _background la grobal
+	// Create background
 	//createBackground();
+
+	// create map with tiledMap
 	createBackgroundWithTiledMap();
 
 	/* Neu su dung background thi nhung thiet lap vat ly tai background se khong su dung
@@ -256,7 +185,7 @@ void BattleScene::createContent()
 	// Create main character sprite
 	////////////////////////////////////////////////////////////////
 	_mainCharacter = Character::createCharacterWithId(_selectedCharacterId);
-	_mainCharacter->setPosition(Vec2(_visibleSize.width, 100));
+	_mainCharacter->setPosition(Vec2(_myMapSize.width/2 , 100));
 	_mainCharacter->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
 	_mainCharacter->setPhysicsBody(PhysicsBody::createCircle(50, PhysicsMaterial(1, 0, 1)));
 	_mainCharacter->getPhysicsBody()->setRotationEnable(false);
@@ -292,18 +221,19 @@ void BattleScene::createContent()
 	// Tao chuong ngai vat
 	/////////////////////////////////////////////////////////////////
 
-
+	createHurdle();
 
 	/////////////////////////////////////////////////////////////////
 	// Tao dich chuyen tuc thoi
 	/////////////////////////////////////////////////////////////////
-
+	createWormHole();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // MENU
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
+/* Khoi tao thanh MenuBar o goc trai man hinh */
 void BattleScene::createMenu()
 {
 	/////////////////////////////////////////////////////////////////
@@ -353,11 +283,11 @@ void BattleScene::createMenu()
 }
 
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // BACKGROUND
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
+/* Khoi tao background bang titledMap */
 void BattleScene::createBackgroundWithTiledMap()
 {
 
@@ -367,12 +297,12 @@ void BattleScene::createBackgroundWithTiledMap()
 	
 	// create background parent
 	_background = Node::create();
-	_background->setPosition(Vec2::ZERO);
+	_background->setPosition(Vec2(2100 , 1000));
 	addChild(_background);
 	_background->setPhysicsBody(PhysicsBody::createEdgeBox(Size(1, 1), PhysicsMaterial(1 , 1 , 1)));
 
 	// create map with tiledmap
-	string filePath = FileUtils::getInstance()->fullPathForFilename("map/test_batgiac.tmx");
+	string filePath = FileUtils::getInstance()->fullPathForFilename("map/map.tmx");
 	_myMap = TMXTiledMap::create(filePath.c_str());
 
 	_background->addChild(_myMap);
@@ -395,11 +325,13 @@ void BattleScene::createBackgroundWithTiledMap()
 
 	_blockLayer->setVisible(false);
 
+	log("Map BoundingBox (%f , %f)", _myMap->getBoundingBox().size.width, _myMap->getBoundingBox().size.height);
+
 	createMapBorder();
 
 }
 
-
+/* Tao borderPhysics cho map */
 void BattleScene::createMapBorder()
 {
 	Size blockSize = _blockLayer->getLayerSize();
@@ -408,6 +340,7 @@ void BattleScene::createMapBorder()
 		for (int j = 0; j < blockSize.height ; j++)
 		{
 			auto tiled = _blockLayer->getTileAt(Vec2(i, j));
+			
 			if (tiled != nullptr)
 			{
 				auto tiledBody = PhysicsBody::createBox(tiled->getBoundingBox().size, PhysicsMaterial(1, 1, 0));
@@ -416,7 +349,7 @@ void BattleScene::createMapBorder()
 				tiledBody->setGravityEnable(false);
 				tiledBody->setContactTestBitmask(0x1);
 				tiledBody->setCollisionBitmask(0x1);
-
+				tiled->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
 				tiled->setPhysicsBody(tiledBody);
 				tiled->setTag(102);
 			}
@@ -464,6 +397,142 @@ void BattleScene::createMiniMap()
 	_selectRect->addChild(_miniIcon);
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// TAO VUNG XOAY DI CHUYEN TUC THOI
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+/* Tao ho den di chuyen tuc thoi o 4 goc cua map */
+void BattleScene::createWormHole()
+{
+	// Todo
+	auto redHole = TextureCache::getInstance()->addImage("image/screen/battle/wormhole_red.png");
+	auto blueHole = TextureCache::getInstance()->addImage("image/screen/battle/wormhole_blue.png");
+
+	auto action = RepeatForever::create(RotateBy::create(1, 180));
+	/*
+	     ____________________________
+		 |                           |
+	    _|Gate1                 Gate2|_
+       |                               |
+	   |                               |
+	   |_                             _|
+	     |Gate0                Gate3 |
+	     |___________________________|
+	*/
+	for (int i = 0; i < 2 ; i++)
+	{
+		// Create Red WormHole
+		// R0(600 , 200) R3(mW - 600 , mH - 200)
+		auto parent1 = Node::create();
+		parent1->setScaleY(0.75f);
+		parent1->setPosition((Vec2(_myMap->getBoundingBox().size) - Vec2(1200, 400)) * i + Vec2(600, 200));
+		_background->addChild(parent1);
+
+		auto redHoleSprite = Sprite::createWithTexture(redHole);
+		auto action1 = action->clone();
+		action1->setTag(WORMHOLE_ROTATE_ACTION);
+		redHoleSprite->runAction(action1);
+		redHoleSprite->setName("OPENGATE");
+		_wormHoleList.push_back(redHoleSprite);
+		parent1->addChild(redHoleSprite);
+
+		// B1(600 , mH - 200) B3(mW - 600 , 200) 
+		auto parent2 = Node::create();
+		parent2->setScaleY(0.75f);
+		parent2->setPosition(Vec2( i * (_myMapSize.width - 1200) + 600, ((i+1) % 2) * (_myMapSize.height - 400) + 200));
+		_background->addChild(parent2);
+
+		auto blueHoleSprite = Sprite::createWithTexture(blueHole);
+		auto action2 = action->clone();
+		action2->setTag(WORMHOLE_ROTATE_ACTION);
+		blueHoleSprite->runAction(action2);
+		blueHoleSprite->setName("OPENGATE");
+		_wormHoleList.push_back(blueHoleSprite);
+		parent2->addChild(blueHoleSprite);
+
+	}
+}
+
+/* Thuc hien viec stop action rotate 
+@param inGate int: Cong vao
+@param outGate int: Cong ra
+*/
+void BattleScene::closeWormHole(int inGate, int outGate)
+{
+	//Todo
+	log("CLOSE WORMHOLE GATE");
+
+	_wormHoleList[inGate]->stopActionByTag(WORMHOLE_ROTATE_ACTION);
+	_wormHoleList[inGate]->setName("CLOSEGATE");
+
+	_wormHoleList[outGate]->stopActionByTag(WORMHOLE_ROTATE_ACTION);
+	_wormHoleList[outGate]->setName("CLOSEGATE");
+
+}
+
+/* Thuc hien action rotate cua wormhole
+@param inGate int: Cong vao
+@param outGate int: Cong ra
+*/
+void BattleScene::openWormHole(int inGate , int outGate)
+{
+	//Todo
+	log("OPEN WORMHOLE GATE");
+
+	auto action1 = RepeatForever::create(RotateBy::create(1, 180));
+	action1->setTag(WORMHOLE_ROTATE_ACTION);
+	_wormHoleList[inGate]->runAction(action1);
+	_wormHoleList[inGate]->setName("OPENGATE");
+
+	auto action2 = action1->clone();
+	action2->setTag(WORMHOLE_ROTATE_ACTION);
+	_wormHoleList[outGate]->runAction(action2);
+	_wormHoleList[outGate]->setName("OPENGATE");
+
+}
+
+/* Thuc hien doi cong cho character */
+void BattleScene::checkWormHoleWorking()
+{
+	for (int i = 0; i <  _wormHoleList.size() ; i++)
+	{
+		Vec2 characterPos = _mainCharacter->getPosition();
+		Vec2 wormHolePos = _wormHoleList[i]->getParent()->getPosition();
+
+		if ((wormHolePos - characterPos).length() < 80 && strcmp(_wormHoleList[i]->getName().c_str(), "OPENGATE") == 0)
+		{
+			log("GATE: %d", i);
+			// Neu character di chuyen vao khu vuc wormHole thi se thuc hien viec di chuyen
+			int outGate = -1;
+			switch (i)
+			{
+			case 0:
+				outGate = 2;
+				break;
+			case 1:
+				outGate = 3;
+				break;
+			case 2:
+				outGate = 0;
+				break;
+			case 3:
+				outGate = 1;
+				break;
+			default:
+				break;
+			}
+
+			_mainCharacter->setPosition(_wormHoleList[outGate]->getParent()->getPosition());
+
+			closeWormHole(i, outGate);
+			log("OUTGATE: %d ", outGate);
+			auto actionOpenGate = Sequence::create(DelayTime::create(20.0f) , CallFuncN::create(CC_CALLBACK_0(BattleScene::openWormHole , this , i , outGate)) , nullptr);
+			_wormHoleList[i]->runAction(actionOpenGate);
+
+			return;
+		}
+	}
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // SKILL BUTTON
@@ -543,23 +612,54 @@ void BattleScene::skillButtonCallback(Ref* pSender, Widget::TouchEventType type)
 
 void BattleScene::createTower()
 {
-
+	// Todo
 }
 
+/* Tao vat can tren duong */
 void BattleScene::createHurdle()
 {
-	// Todo
+	// Wall ngang texture
+	auto wallHorizontal = TextureCache::getInstance()->addImage("map/wall_horizontal.png");
+	// Wall doc texture
+	auto wallVertical = TextureCache::getInstance()->addImage("map/wall_vertical.png");
+
+	auto wall1 = createHurdlePart(wallHorizontal, Vec2(_myMapSize.width /2 , _myMapSize.height * 2 / 3));
+	wall1->setScaleX((_myMapSize.width * 3 / 5) / wall1->getContentSize().width);
+
+	auto wall2 = createHurdlePart(wallHorizontal, Vec2(_myMapSize.width / 2, _myMapSize.height * 1 / 3));
+	wall2->setScaleX((_myMapSize.width * 3 / 5) / wall1->getContentSize().width);
+
+	auto wall3 = createHurdlePart(wallVertical, Vec2(_myMapSize.width / 5, _myMapSize.height / 3));
+	wall3->setScaleY(1.5f);
+
+	auto wall4 = createHurdlePart(wallVertical, Vec2(_myMapSize.width * 4 / 5, _myMapSize.height * 2 / 3));
+	wall4->setScaleY(1.5f);
+
+	auto wall5 = createHurdlePart(wallVertical, Vec2(_myMapSize.width * 2 / 5, _myMapSize.height * 5 / 9));
+	auto wall6 = createHurdlePart(wallVertical, Vec2(_myMapSize.width * 3 / 5, _myMapSize.height * 4 / 9));
+
+	auto wall7 = createHurdlePart(wallVertical, Vec2(_myMapSize.width * 1 / 5, _myMapSize.height - wall6->getContentSize().height / 2));
+	wall7->setScaleY(0.8f);
+
+	auto wall8 = createHurdlePart(wallVertical, Vec2(_myMapSize.width * 4 / 5, wall7->getContentSize().height / 2));
+	wall8->setScaleY(0.8f);
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////
-// TAO VUNG XOAY DI CHUYEN TUC THOI
-//////////////////////////////////////////////////////////////////////////////////////////////////
 
-void BattleScene::createWormHole()
+Sprite* BattleScene::createHurdlePart(Texture2D* wallTexture, Vec2 pos)
 {
-	// Todo
-}
+	auto wall = Sprite::createWithTexture(wallTexture);
+	auto wallBody = PhysicsBody::createBox(wall->getContentSize(), PhysicsMaterial(1, 1, 0));
+	wallBody->setDynamic(false);
+	wallBody->setCollisionBitmask(0x1);
+	wallBody->setContactTestBitmask(0x1);
+	wall->setPhysicsBody(wallBody);
+	wall->setPosition(pos);
+	_background->addChild(wall);
 
+	return wall;
+
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // UPDATE EVENT (su dung update de load theo dinh ky cac thanh phan can update lien tuc)
@@ -569,6 +669,8 @@ void BattleScene::createWormHole()
 void BattleScene::update(float dt)
 {
 	updateMiniMap();
+
+	checkWormHoleWorking();
 }
 
 /* Ham update cu 1s se duoc goi 1 lan, su dung de update time cua he thong */
@@ -985,6 +1087,79 @@ void BattleScene::createMiniCircleAndMiniUnit(int circleLocation)
 	addChild(_miniUnit , 100);
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Debug Cotnent
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+void BattleScene::createDebugContent()
+{
+	auto physicsBodyDebugBtn = Button::create();
+	physicsBodyDebugBtn->loadTextureNormal("test.png");
+	physicsBodyDebugBtn->setPosition(Vec2(_visibleSize.width - 50, 70));
+	physicsBodyDebugBtn->setTouchEnabled(true);
+	physicsBodyDebugBtn->addTouchEventListener(CC_CALLBACK_2(BattleScene::debugPhysicsButtonCallback, this));
+	addChild(physicsBodyDebugBtn, 10);
+
+	auto menuDebugBtn = Button::create();
+	menuDebugBtn->loadTextureNormal("test.png");
+	menuDebugBtn->setPosition(Vec2(_visibleSize.width - 100, 70));
+	menuDebugBtn->setTouchEnabled(true);
+	menuDebugBtn->addTouchEventListener(CC_CALLBACK_2(BattleScene::menuButtonCallback, this));
+	addChild(menuDebugBtn, 10);
+}
+
+// Button debug physics callback
+void BattleScene::debugPhysicsButtonCallback(Ref* pSender, Widget::TouchEventType type)
+{
+	log("Debug Physics Callback");
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::BEGAN:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::MOVED:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+	{
+		// Neu on -> off , off -> on
+		if (_myWorld->getDebugDrawMask() == PhysicsWorld::DEBUGDRAW_ALL)
+		{
+			_myWorld->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_NONE);
+		}
+		else
+		{
+			_myWorld->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
+		}
+		break;
+
+	}case cocos2d::ui::Widget::TouchEventType::CANCELED:
+		break;
+	default:
+		break;
+	}
+}
+
+// Chuyen ve trang ModeSelectScene
+void BattleScene::menuButtonCallback(Ref* pSender, Widget::TouchEventType type)
+{
+	log("Debug Menu Callback");
+	switch (type)
+	{
+	case cocos2d::ui::Widget::TouchEventType::BEGAN:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::MOVED:
+		break;
+	case cocos2d::ui::Widget::TouchEventType::ENDED:
+	{
+		Director::getInstance()->replaceScene(ModeSelectScene::createScene());
+		break;
+
+	}case cocos2d::ui::Widget::TouchEventType::CANCELED:
+		break;
+	default:
+		break;
+	}
+}
 
 
 
