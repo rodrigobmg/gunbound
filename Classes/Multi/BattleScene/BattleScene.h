@@ -38,7 +38,8 @@ private :
 
 	/* Get data from database */
 	vector<SkillInfo> _allSkillSelectedInfo; // Cac skill duoc unit lua chon
-	// Thuc ra character duoc lua chon chinh la tuong trong tran dau
+	vector<SkillInfo> _allSkillUnitInfo; // Skill co san cua unit
+	
 	UnitInfo _allUnitSelectedInfo; // Unit duoc lua chon
 
 	/////////////////////////////////////////////////

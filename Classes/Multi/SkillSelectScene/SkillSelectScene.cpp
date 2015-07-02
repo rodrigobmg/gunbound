@@ -32,6 +32,8 @@ bool SkillSelectScene::init(int unitId)
 
 	_selectedUnitId = unitId;
 
+
+
 	_titleLabel->setString("Select Skill");
 
 	// get data from database
@@ -214,6 +216,7 @@ void SkillSelectScene::leftArrowCallback(Ref* pSender, Widget::TouchEventType ty
 		break;
 	}
 }
+
 /*
 Xu ly su kien click button right arrow(di chuyen page view ve phia ben phai)
 */
@@ -237,7 +240,6 @@ void SkillSelectScene::rightArrowCallback(Ref* pSender, Widget::TouchEventType t
 		break;
 	}
 }
-
 
 /*
 Su kien click vao skill item thi se hien thi skillDialogDetail
@@ -279,6 +281,7 @@ void SkillSelectScene::onTouchSkill(Ref* pSender, Widget::TouchEventType type)
 /////////////////////////////////////////////////////////////////////////////
 // Show unit selected with Clipping Node
 //////////////////////////////////////////////////////////////////////////////
+
 void SkillSelectScene::createSkillDisplay()
 {
 	// ClippingNode hien thi unit duoc lua chon
@@ -381,6 +384,7 @@ void SkillSelectScene::onTouchSkillSlot(Ref* pSender, Widget::TouchEventType typ
 
 /*
 Chuyen mau button duoc lua chon thanh vang
+@param selectedSlot int: Chi so cua slot duoc lua chon de chuyen sang mau khac
 */
 void SkillSelectScene::setSelectSlot(int selectedSlot){
 	switch (selectedSlot)
@@ -398,15 +402,26 @@ void SkillSelectScene::setSelectSlot(int selectedSlot){
 	}
 }
 
-void SkillSelectScene::onSelectSkill(int selectedSkillId){
+/* Hien thi skill len tren ClippingNode sau khi Decide Dialog
+@param selectedSkillId int: ID cua skill duoc lua chon
+*/
+void SkillSelectScene::onSelectSkill(int selectedSkillId)
+{
+	log("SkillSelectScene::onSelectSkill ID: %d ", selectedSkillId);
 	switch (_onSelectedSlot)
 	{
 	case 1:
-		showSkillAfterCloseDialog(_skillTemp1 , _selectedSkillName1, selectedSkillId);
+	{
+		showSkillAfterCloseDialog(_skillTemp1, _selectedSkillName1, selectedSkillId);
+		_allSkillSelectedId.push_back(selectedSkillId);
 		break;
+	}
 	case 2:
-		showSkillAfterCloseDialog(_skillTemp2 , _selectedSkillName2, selectedSkillId);
+	{
+		showSkillAfterCloseDialog(_skillTemp2, _selectedSkillName2, selectedSkillId);
+		_allSkillSelectedId.push_back(selectedSkillId);
 		break;
+	}
 	default:
 		break;
 	}
@@ -414,9 +429,9 @@ void SkillSelectScene::onSelectSkill(int selectedSkillId){
 
 /*
 * Ham show unit sau khi dong dialog
-* @param Button* parent: Button hien thi unit (_unitTemp1, _unitTemp2 , _unitTemp3)
-* @param LabelTTF* unitNameLabel: label hien thi ten cua unit duoc lua chon
-* @param int unitId : id cua unit duoc lua chon
+* @param parent Button: Button hien thi unit (_unitTemp1, _unitTemp2 , _unitTemp3)
+* @param unitNameLabel LabelTTF: label hien thi ten cua unit duoc lua chon
+* @param unitId int: id cua unit duoc lua chon
 */
 void SkillSelectScene::showSkillAfterCloseDialog(Button* parent, LabelTTF* skillNameLabel, int skillId){
 	// Load lai texture va labelName voi unit duoc lua chon
@@ -444,6 +459,7 @@ void SkillSelectScene::onTouchMoved(Touch* touch, Event* event)
 {
 
 }
+
 void SkillSelectScene::onTouchEnded(Touch* touch, Event* event)
 {
 
@@ -506,6 +522,7 @@ void SkillSelectScene::onBackButtonCallback(Ref* pSender, Widget::TouchEventType
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
 		Director::getInstance()->replaceScene(TransitionMoveInR::create(0.25f, UnitSelectScene::createScene()));
+		
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:
@@ -528,7 +545,24 @@ void SkillSelectScene::nextButtonCallback(Ref* pSender, Widget::TouchEventType t
 		break;
 	case cocos2d::ui::Widget::TouchEventType::ENDED:
 	{
-		Director::getInstance()->replaceScene(TransitionMoveInR::create(0.5f, BattleScene::createScene(_selectedUnitId)));
+		vector<SkillInfo> skillSelectedList;
+		for (auto &item : _allSkillSelectedId)
+		{
+			log("Item: %d", item);
+			if (item < 0)
+			{
+				return;
+			}
+			skillSelectedList.push_back(_allSkillInfo[item-1]);
+		}
+
+		// Bat buoc phai lua chon 2 skill moi co the next vao Battle
+		if (_selectedSkillNum == 2)
+		{
+			SkillDataModel::getInstance()->setAllSkillSelected(skillSelectedList);
+			Director::getInstance()->replaceScene(TransitionMoveInR::create(0.5f, BattleScene::createScene(_selectedUnitId)));
+		}
+
 		break;
 	}
 	case cocos2d::ui::Widget::TouchEventType::CANCELED:

@@ -105,10 +105,11 @@ SkillInfo SkillDataModel::getDataSkillById(int skillId)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // GET UNIT SKILL BY UNIT ID
+// Ham lay ra skill co san cua unit trong database bang cach join 3 bang skill,unit,unit_skill
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 /* Lay ra 1 phan tu skill trong bang skill theo thong tin tu bang unit_skill va unit */
-vector<SkillInfo> SkillDataModel::getDataSkillBuUnitId(int unitId)
+vector<SkillInfo> SkillDataModel::getDataSkillByUnitId(int unitId)
 {
 	vector<SkillInfo> skillList;
 
@@ -142,11 +143,15 @@ vector<SkillInfo> SkillDataModel::getDataSkillBuUnitId(int unitId)
 		skillList.push_back(temp);
 
 		///TEST_LOG
+		/*
 		for (int i = 0; i < item.size(); i++)
 		{
 			log("%s", item[i].c_str());
 		}
 		log("==========================================");
+		*/
+	
+	
 	}
 
 	return skillList;

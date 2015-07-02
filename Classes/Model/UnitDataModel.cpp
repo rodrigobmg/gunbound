@@ -73,12 +73,13 @@ vector<UnitInfo> UnitDataModel::getDataUnitFromDatabase()
 		allUnitInfo.push_back(temp);
 
 		///TEST_LOG
+		/*
 		for (int i = 0; i < item.size() ; i++)
 		{
 		log("%s", item[i].c_str());
 		}
 		log("==========================================");
-		
+		*/
 
 	}
 

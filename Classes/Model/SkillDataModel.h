@@ -21,11 +21,15 @@ public:
 	vector<SkillInfo> getDataSkillFromDatabase();
 	SkillInfo getDataSkillById(int skillId);
 
-	vector<SkillInfo> getDataSkillBuUnitId(int unitId);
+	vector<SkillInfo> getDataSkillByUnitId(int unitId);
 
 private:
 
 	static SkillDataModel* _skillInfoData;
+
+	// Mang duoc tao ra de chua list skill duoc unit lua chon
+	// Se duoc su dung tai SkillSelectScene
+	CC_SYNTHESIZE(vector<SkillInfo>, _allSkillSelected, AllSkillSelected);
 
 
 

@@ -22,7 +22,7 @@ bool UnitDetailDialog::init(UnitInfo unitInfo, MyTouchEvent decideCallback, MyTo
 	// Goi toi ham lay du lieu tu database theo _unitInfo._id duoc truyen vao
 	_unitInfo = unitInfo; // Du lieu cua unit duoc chon
 
-	_allSkillUnit = SkillDataModel::getInstance()->getDataSkillBuUnitId(_unitInfo.id);
+	_allSkillUnit = SkillDataModel::getInstance()->getDataSkillByUnitId(_unitInfo.id);
 
 	// Lay du lieu ve skill cua unit duoc chon
 
@@ -140,7 +140,6 @@ void UnitDetailDialog::createDisplayUnitInfo(Sprite* parent){
 	_skillLabel->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
 	parent->addChild(_skillLabel);
 }
-
 
 void UnitDetailDialog::statusButtonCallback(Ref* pSender, Widget::TouchEventType type){
 	switch (type)

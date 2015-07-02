@@ -59,9 +59,12 @@ bool BattleScene::init(int selectedUnitId)
 	// Lay data tu database
 	//////////////////////////////////////////////////////////////////////////////////
 
-	_allSkillSelectedInfo = SkillDataModel::getInstance()->getDataSkillBuUnitId(_selectedCharacterId);
+	// Skill co san cua unit
+	_allSkillUnitInfo = SkillDataModel::getInstance()->getDataSkillByUnitId(_selectedCharacterId);
+	// Data cua unit
 	_allUnitSelectedInfo = UnitDataModel::getInstance()->getDataUnitById(_selectedCharacterId);
-
+	// Data cua skill duoc unit lua chon
+	_allSkillSelectedInfo = SkillDataModel::getInstance()->getAllSkillSelected();
 
 	//////////////////////////////////////////////////////////////////////////////////
 	// Thiet lap kieu di chuyen cho _mainCharacter
@@ -424,7 +427,7 @@ void BattleScene::createWormHole()
 		// Create Red WormHole
 		// R0(600 , 200) R3(mW - 600 , mH - 200)
 		auto parent1 = Node::create();
-		parent1->setScaleY(0.75f);
+		parent1->setScaleY(0.5f);
 		parent1->setPosition((Vec2(_myMap->getBoundingBox().size) - Vec2(1200, 400)) * i + Vec2(600, 200));
 		_background->addChild(parent1);
 
@@ -438,7 +441,7 @@ void BattleScene::createWormHole()
 
 		// B1(600 , mH - 200) B3(mW - 600 , 200) 
 		auto parent2 = Node::create();
-		parent2->setScaleY(0.75f);
+		parent2->setScaleY(0.5f);
 		parent2->setPosition(Vec2( i * (_myMapSize.width - 1200) + 600, ((i+1) % 2) * (_myMapSize.height - 400) + 200));
 		_background->addChild(parent2);
 
@@ -542,11 +545,11 @@ void BattleScene::createSkillButton()
 {
 	// Tao 4 loai skill trong do co 2 loai unit co san va 2 loai duoc lua chon
 
-	string skill1ImagePath = _allSkillSelectedInfo[0].imagePath;
-	string skill2ImagePath = _allSkillSelectedInfo[1].imagePath;
+	string skill1ImagePath = _allSkillUnitInfo[0].imagePath;
+	string skill2ImagePath = _allSkillUnitInfo[1].imagePath;
 
-	string skill3ImagePath = "image/screen/battle/skill_icon_3.png";
-	string skill4ImagePath = "image/screen/battle/skill_icon_4.png";
+	string skill3ImagePath = _allSkillSelectedInfo[0].imagePath;
+	string skill4ImagePath = _allSkillSelectedInfo[1].imagePath;
 
 	_skill1UnitBtn = Button::create();
 	_skill1UnitBtn->setTag(SKILL_TAG_1);

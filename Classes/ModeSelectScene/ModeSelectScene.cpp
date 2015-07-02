@@ -57,7 +57,7 @@ bool ModeSelectScene::init(){
 	testBattleScene->setTouchEnabled(true);
 	testBattleScene->addTouchEventListener(CC_CALLBACK_2(ModeSelectScene::testBattleSceneCallback, this));
 	testBattleScene->setPosition(Vec2(testBattleScene->getContentSize().width/2 , testBattleScene->getContentSize().height/2 ));
-	addChild(testBattleScene);
+	//addChild(testBattleScene);
 
 
 	return true;
