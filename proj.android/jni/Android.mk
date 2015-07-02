@@ -14,6 +14,7 @@ LOCAL_SRC_FILES := hellocpp/main.cpp \
                    ../../Classes/AppDelegate.cpp \
                    ../../Classes/ClassBase/DialogBase.cpp \
                    ../../Classes/ClassBase/LayerBase.cpp \
+                   ../../Classes/ClassBase/MyBodyParser.cpp \
                    ../../Classes/Database/DataUtils.cpp \
                    ../../Classes/Database/sqlite3.c \
                    ../../Classes/Database/SqlUtils.cpp \
@@ -24,7 +25,15 @@ LOCAL_SRC_FILES := hellocpp/main.cpp \
                    ../../Classes/Multi/SkillSelectScene/SkillDetailDialog.cpp \
                    ../../Classes/Multi/UnitSelectScene/UnitSelectScene.cpp \
                    ../../Classes/Multi/UnitSelectScene/UnitDetailDialog.cpp \
-                   ../../Classes/Object/Character/Character.cpp
+                   ../../Classes/Object/Character/Character.cpp \
+                   ../../Classes/Object/Background/Background.cpp \
+                   ../../Classes/Object/Effect/EffectParticle.cpp \
+                   ../../Classes/Object/Effect/EffectGAF.cpp \
+                   ../../Classes/Object/Effect/EffectLWF.cpp \
+                   ../../Classes/Object/MiniCircle/MiniCircle.cpp \
+                   ../../Classes/Model/DataModel.cpp \
+                   ../../Classes/Model/UnitDataModel.cpp \
+                   ../../Classes/Model/SkillDataModel.cpp
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../Classes
 

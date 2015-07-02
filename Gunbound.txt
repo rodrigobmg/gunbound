@@ -58,6 +58,13 @@ Tham khảo: http://www.stdio.vn/articles/read/245-lam-the-nao-de-luu-du-lieu-tr
 
 + Step6: Đồng bộ data với BattleScene
 Dữ liệu sẽ được đồng bộ từ data(selected unit , selected skill)
++ Data Skill được lựa chọn tại SkillSelectScene sẽ được chứa trong 1 vector<SkillInfo> và khi nào
+dùng thì sẽ gọi nó ra.
++ Tạo các chưc năng di chuyển: AUTO , MANUAL , CIRCLE
+
++Step7: Thay Map thành TiledMap và tạo các chướng ngại vật
++ Tạo chức năng dịch chuyển tức thời tại 4 góc của map
+
 
 
 
